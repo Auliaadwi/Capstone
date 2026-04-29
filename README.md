@@ -69,6 +69,41 @@ This repository includes a `render.yaml` Blueprint for the backend API and a sha
 
 The API health endpoint is `/health`.
 
+### Deploy backend to your own server
+
+If you already have your own VPS or server, use the Docker Compose path instead of Render.
+
+Files:
+- `apps/api/Dockerfile`
+- `docker-compose.backend.yml`
+- `apps/api/server.env.example`
+- `deploy/nginx-skillmap-api.conf.example`
+
+Recommended topology:
+- `api` container for Flask + gunicorn
+- `postgres` container for shared project data
+- Nginx on the host as reverse proxy
+- optional domain such as `api.your-domain.com`
+
+Basic steps on the server:
+
+1. Clone the repository.
+2. Copy `apps/api/server.env.example` to `apps/api/server.env`.
+3. Set a strong Postgres password in both:
+   - `apps/api/server.env`
+   - `docker-compose.backend.yml`
+4. Start services:
+   `docker compose -f docker-compose.backend.yml up -d --build`
+5. Check API:
+   `curl http://localhost:3001/health`
+6. Configure Nginx using `deploy/nginx-skillmap-api.conf.example`.
+7. Point the frontend `VITE_API_URL` to your public API domain.
+
+Notes:
+- Do not expose PostgreSQL publicly unless you really need it.
+- `CORS_ORIGIN` should be your frontend domain in production, not `*`.
+- The backend auto-creates tables when `AUTO_CREATE_TABLES=true`.
+
 ## API flow
 
 1. User uploads a CV through the web app.
