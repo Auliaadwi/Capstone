@@ -659,9 +659,9 @@ a {
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.08fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 22px;
-  max-width: 1420px;
+  max-width: 1120px;
   margin: 0 auto;
   align-items: start;
 }
@@ -842,6 +842,37 @@ a {
   padding: 8px 10px;
   font-size: 0.76rem;
   font-weight: 850;
+}
+
+.dashboard-section {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 26px clamp(22px, 3vw, 36px) 118px;
+  scroll-margin-top: 110px;
+}
+
+.dashboard-section .roadmap-panel-card {
+  min-height: auto;
+}
+
+.dashboard-result-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.42fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  margin-bottom: 22px;
+}
+
+.dashboard-result-grid .readiness-card,
+.dashboard-result-grid .role-summary {
+  margin: 0;
+}
+
+.dashboard-result-grid .role-summary {
+  padding: 18px;
+  border: 1px solid rgba(125, 226, 222, 0.13);
+  border-radius: 8px;
+  background: rgba(5, 18, 24, 0.34);
 }
 
 .insight-section {
@@ -1073,6 +1104,10 @@ a {
   .workspace-grid {
     grid-template-columns: 1fr;
   }
+
+  .dashboard-result-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {
@@ -1187,6 +1222,11 @@ a {
   }
 
   .workspace-section {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .dashboard-section {
     padding-right: 18px;
     padding-left: 18px;
   }

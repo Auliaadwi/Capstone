@@ -543,10 +543,23 @@ function App() {
               )}
             </article>
 
-            <article className="workspace-panel roadmap-panel-card" id="dashboard">
-              <div className="panel-label">03 / Personalized Dashboard</div>
-              <h3>{(recommendation || analysis).targetRole}</h3>
+          </div>
+        </section>
 
+        <section className="dashboard-section" id="dashboard">
+          <div className="section-heading compact">
+            <h2>Personalized Dashboard</h2>
+            <p>
+              A separate result area for readiness score, target role, business goal, and the latest
+              recommended learning path.
+            </p>
+          </div>
+
+          <article className="workspace-panel roadmap-panel-card">
+            <div className="panel-label">03 / Personalized Dashboard</div>
+            <h3>{(recommendation || analysis).targetRole}</h3>
+
+            <div className="dashboard-result-grid">
               <div className="readiness-card">
                 <strong>{(recommendation || analysis).readinessScore ?? analysis.readinessScore}%</strong>
                 <span>{(recommendation || analysis).readinessLabel}</span>
@@ -556,23 +569,23 @@ function App() {
                 <span>Business goal</span>
                 <p>{activeRole.businessGoal || analysis.businessGoal}</p>
               </div>
+            </div>
 
-              <div className="roadmap-list">
-                {activeRoadmap.map((step, index) => (
-                  <div className="roadmap-step" key={step.id || step.action}>
-                    <span>{String(index + 1).padStart(2, '0')}</span>
-                    <p>{step.action || step}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="roadmap-list">
+              {activeRoadmap.map((step, index) => (
+                <div className="roadmap-step" key={step.id || step.action}>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <p>{step.action || step}</p>
+                </div>
+              ))}
+            </div>
 
-              <div className="tech-coverage">
-                {(dashboard?.compliance?.frontend || ['React', 'Vite', 'Axios networking calls']).map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-              </div>
-            </article>
-          </div>
+            <div className="tech-coverage">
+              {(dashboard?.compliance?.frontend || ['React', 'Vite', 'Axios networking calls']).map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+          </article>
         </section>
 
         <section className="insight-section">
