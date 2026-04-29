@@ -1,0 +1,13 @@
+node_modules
+dist
+build
+.env
+.env.*
+.DS_Store
+uploads
+__pycache__
+*.pyc
+.venv/
+.pytest_cache/
+.postgres-data/
+.postgres.log

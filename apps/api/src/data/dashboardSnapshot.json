@@ -1,0 +1,15 @@
+{
+  "user": {
+    "name": "Alya Rahman",
+    "role": "Fullstack Explorer"
+  },
+  "skillScore": 78,
+  "targetRole": "Junior Fullstack Developer",
+  "strengths": ["JavaScript", "React", "UI Building"],
+  "gaps": ["Flask API Design", "System Design", "SQL Joins"],
+  "roadmap": [
+    "Build a CRUD API with Flask and PostgreSQL",
+    "Practice relational schema design and joins",
+    "Ship one end-to-end project with public deployment"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "technology": {
+    "JavaScript": ["javascript", "js", "ecmascript"],
+    "React": ["react", "next", "vite"],
+    "Flask": ["flask", "rest api", "python backend", "backend api"],
+    "Database": ["sql", "postgres", "mysql", "prisma"],
+    "AI": ["machine learning", "ml", "nlp", "ai", "python", "pytorch", "tensorflow"]
+  },
+  "design": {
+    "UX": ["ux", "user experience", "user research"],
+    "UI": ["ui", "interface design", "figma", "sketch"],
+    "Graphic Design": ["illustrator", "photoshop", "branding"]
+  },
+  "marketing": {
+    "SEO": ["seo", "search engine optimization"],
+    "Content": ["content", "copywriting", "blogging"],
+    "Growth": ["growth", "ppc", "ads", "campaign"]
+  },
+  "finance": {
+    "Accounting": ["accounting", "bookkeeping", "audit"],
+    "Financial Analysis": ["financial analysis", "modeling", "excel"]
+  },
+  "healthcare": {
+    "Clinical": ["clinical", "patient care", "nursing"],
+    "Health Informatics": ["informatics", "ehr", "health data"]
+  }
+}

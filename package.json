@@ -1,0 +1,14 @@
+{
+  "name": "skillmap",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:db:start": "powershell -ExecutionPolicy Bypass -File scripts/start-local-postgres.ps1",
+    "dev:db:stop": "powershell -ExecutionPolicy Bypass -File scripts/stop-local-postgres.ps1",
+    "dev:db:status": "powershell -ExecutionPolicy Bypass -File scripts/status-local-postgres.ps1",
+    "dev:api": "python apps/api/run.py",
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:web": "npm --prefix apps/web run build",
+    "preview:web": "npm --prefix apps/web run preview"
+  }
+}
