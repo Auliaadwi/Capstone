@@ -6,13 +6,24 @@ const api = axios.create({
 });
 
 export const fetchDashboard = () => api.get('/api/dashboard/overview');
-export const fetchQuizQuestions = (domain = 'technology') => api.get(`/api/quiz/questions?domain=${encodeURIComponent(domain)}`);
-export const submitQuiz = (answers, domain = 'technology') => api.post('/api/quiz/submit', { answers, domain });
+export const fetchRoles = () => api.get('/api/roles');
+export const fetchQuizQuestions = (domain = 'technology', targetRole = 'fullstack-web-developer') =>
+  api.get(`/api/quiz/questions?domain=${encodeURIComponent(domain)}&targetRole=${encodeURIComponent(targetRole)}`);
+export const submitQuiz = (answers, domain = 'technology', targetRole = 'fullstack-web-developer') =>
+  api.post('/api/quiz/submit', { answers, domain, targetRole });
+export const createRecommendation = (payload) => api.post('/api/recommendations', payload);
+export const saveLead = (email, targetRole) => api.post('/api/leads', { email, targetRole });
 
-export const uploadCv = async (file, domain = 'technology') => {
+export const uploadCv = async (file, domain = 'technology', targetRole = 'fullstack-web-developer', text = '') => {
   const formData = new FormData();
-  formData.append('cv', file);
+  if (file) {
+    formData.append('cv', file);
+  }
   formData.append('domain', domain);
+  formData.append('targetRole', targetRole);
+  if (text) {
+    formData.append('text', text);
+  }
 
   return api.post('/api/cv/upload', formData, {
     headers: {

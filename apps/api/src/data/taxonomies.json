@@ -2,9 +2,22 @@
   "technology": {
     "JavaScript": ["javascript", "js", "ecmascript"],
     "React": ["react", "next", "vite"],
-    "Flask": ["flask", "rest api", "python backend", "backend api"],
-    "Database": ["sql", "postgres", "mysql", "prisma"],
-    "AI": ["machine learning", "ml", "nlp", "ai", "python", "pytorch", "tensorflow"]
+    "Express": ["express", "node", "nodejs", "node.js"],
+    "REST API": ["rest", "restful", "api", "endpoint", "http"],
+    "PostgreSQL": ["postgres", "postgresql", "sql", "database", "relational"],
+    "Deployment": ["deployment", "deploy", "vercel", "netlify", "render", "hosting"],
+    "Testing": ["testing", "test", "debugging", "qa"],
+    "Python": ["python", "pandas", "numpy"],
+    "TensorFlow": ["tensorflow", "keras", "deep learning"],
+    "NLP": ["nlp", "natural language", "text classification", "skill extraction"],
+    "TensorBoard": ["tensorboard", "training metrics"],
+    "Model Evaluation": ["accuracy", "mae", "evaluation", "validation"],
+    "Model Serving": ["flask", "fastapi", "inference", "model api"],
+    "Data Wrangling": ["wrangling", "cleaning", "preprocessing", "gathering data"],
+    "EDA": ["eda", "exploratory", "visualization", "analysis"],
+    "Feature Engineering": ["feature engineering", "feature extraction"],
+    "A/B Testing": ["a/b testing", "ab testing", "experiment"],
+    "Streamlit": ["streamlit", "dashboard"]
   },
   "design": {
     "UX": ["ux", "user experience", "user research"],

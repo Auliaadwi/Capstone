@@ -1,15 +1,15 @@
 {
   "user": {
-    "name": "Alya Rahman",
-    "role": "Fullstack Explorer"
+    "name": "Demo User",
+    "role": "SkillMap Explorer"
   },
-  "skillScore": 78,
+  "skillScore": 76,
   "targetRole": "Junior Fullstack Developer",
-  "strengths": ["JavaScript", "React", "UI Building"],
-  "gaps": ["Flask API Design", "System Design", "SQL Joins"],
+  "strengths": ["JavaScript", "React", "Problem Solving"],
+  "gaps": ["Express", "PostgreSQL", "Deployment"],
   "roadmap": [
-    "Build a CRUD API with Flask and PostgreSQL",
-    "Practice relational schema design and joins",
-    "Ship one end-to-end project with public deployment"
+    "Create Express routes for upload CV, quiz, recommendations, and dashboard data",
+    "Persist users, CV analysis, quiz attempts, and learning paths in PostgreSQL",
+    "Deploy frontend and API, then connect production environment variables"
   ]
 }

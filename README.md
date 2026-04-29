@@ -1,130 +1,119 @@
 # SkillMap
 
-SkillMap is a starter monorepo for CV analysis and adaptive learning path recommendations.
+SkillMap is a capstone MVP for "Navigator Pembelajaran Keterampilan yang Dipersonalisasi". It helps final-year students and fresh graduates compare their CV/profile against target role requirements, validate readiness through an adaptive quiz, and receive a personalized learning roadmap.
 
-The current scaffold is aligned to the capstone full-stack scope first:
-- Frontend: React + Vite
-- Backend: Flask REST API
-- Database: PostgreSQL + SQLAlchemy
-- AI service: reserved for a later integration phase
+## Project Fit
+
+Core features are aligned with the CC26-PSU401 project plan:
+
+- CV upload and NLP-style skill extraction
+- Adaptive quiz for practical readiness signals
+- Skill gap mapping against target roles
+- Personalized learning path recommendation
+- Dashboard insight for skills, gaps, roadmap, and recent activity
+
+## Stack
+
+- Frontend: React + Vite, Axios networking calls, responsive UI
+- Main API: Express REST API
+- Persistence: PostgreSQL with in-memory fallback when `DATABASE_URL` is not configured
+- AI/ML integration: contract-ready endpoints for CV analysis, recommendation, and future Flask/FastAPI model serving
+- Data Science integration: dashboard and requirement contracts ready for EDA/Streamlit outputs
+
+The previous Flask API files are still present as a useful starting point for a separate AI/model service. The main full-stack REST API now runs on Express to satisfy the web-backend requirement.
 
 ## Structure
 
-- `apps/api` - Flask API for CV upload, quiz, dashboard data, and mock analysis
-- `apps/web` - Vite React frontend with Axios API calls and responsive dashboard UI
-- `services/ai` - reserved folder for future AI or DS integration
-- `database/schema.sql` - PostgreSQL schema for the MVP
+- `apps/api` - Express API for CV upload, quiz, recommendations, roles, dashboard data, and lead capture
+- `apps/web` - Vite React frontend with Axios API calls and responsive SkillMap UI
+- `services/ai` - reserved folder for future model service integration
+- `database/schema.sql` - PostgreSQL schema for users, CVs, skills, learning paths, quiz attempts, and leads
 
-## Run locally
+## Run Locally
 
-1. Install frontend dependencies inside `apps/web`.
-2. Install Python dependencies from `apps/api/requirements.txt`.
-3. Copy `apps/api/.env.example` to `apps/api/.env` if you want local environment variables.
-4. Start the Flask API on port `3001`.
-5. Start the web app on port `5173`.
+Install dependencies:
 
-### Local PostgreSQL for this project
+```bash
+npm --prefix apps/api install
+npm --prefix apps/web install
+```
 
-This repository now includes a project-local PostgreSQL cluster in `.postgres-data` that listens on port `5433`.
+Start the API:
+
+```bash
+npm --prefix apps/api run dev
+```
+
+Start the web app:
+
+```bash
+npm --prefix apps/web run dev
+```
+
+Default URLs:
+
+- Web: `http://localhost:5173`
+- API: `http://localhost:3001`
+- Health: `http://localhost:3001/health`
+
+On Windows PowerShell, use `npm.cmd` if the execution policy blocks `npm.ps1`.
+
+## Local PostgreSQL
+
+This repository includes helper scripts for a project-local PostgreSQL cluster.
 
 - Start DB: `npm run dev:db:start`
 - Stop DB: `npm run dev:db:stop`
 - Check status: `npm run dev:db:status`
 
-The backend connection string is stored in `apps/api/.env`.
-
 Optional API environment variables:
 
 - `DATABASE_URL` for PostgreSQL persistence
-- `PORT` to override the API port
-- `CORS_ORIGIN` to allow the frontend origin
-- `AUTO_CREATE_TABLES` to let SQLAlchemy create the base tables automatically
+- `PORT` to override API port
+- `CORS_ORIGIN` to allow frontend origins
+- `AUTO_CREATE_TABLES` to let Express create base tables automatically
+- `DATABASE_SSL=true` when a hosted PostgreSQL provider requires SSL
 
-## Environment
+If `DATABASE_URL` is empty, the API still works with an in-memory store so the MVP demo does not crash.
 
-Create `apps/web/.env` from `apps/web/.env.example` if you want to override the API URL.
+## REST API
+
+- `GET /health`
+- `GET /api/roles`
+- `POST /api/cv/upload`
+- `GET /api/quiz/questions?domain=technology&targetRole=fullstack-web-developer`
+- `POST /api/quiz/submit`
+- `POST /api/recommendations`
+- `GET /api/dashboard/overview`
+- `GET /api/dashboard/:userId`
+- `POST /api/leads`
+- `GET /api/project/requirements`
 
 ## Deployment
 
-- Frontend: deploy `apps/web` to Netlify or Vercel.
-- API: deploy `apps/api` to Render, Railway, or a small VPS with Python support.
-- Static hosting like GitHub Pages is fine for the frontend only, but the API must be deployed separately.
-- Keep `VITE_API_URL` pointed to the deployed Flask API.
+Frontend deployment can use Netlify, Vercel, or GitHub Pages. Set `VITE_API_URL` to the deployed API URL.
 
-### Deploy backend to Render
+Backend deployment can use Render, Railway, or a VPS. This repository includes:
 
-This repository includes a `render.yaml` Blueprint for the backend API and a shared Postgres database.
+- `render.yaml` for Render Node service + PostgreSQL
+- `apps/api/Dockerfile` for Express API containerization
+- `docker-compose.backend.yml` for API + PostgreSQL
+- `deploy/nginx-skillmap-api.conf.example` for reverse proxy setup
 
-1. Push the latest code to GitHub.
-2. Open this Blueprint link in Render:
-   `https://dashboard.render.com/blueprint/new?repo=https://github.com/Arapemula/SkillMap`
-3. Review the generated resources:
-   - web service: `skillmap-api`
-   - postgres database: `skillmap-db`
-4. Set `CORS_ORIGIN` in Render.
-   - Temporary broad access for MVP: `*`
-   - Better once frontend is deployed: `https://your-frontend-domain`
-5. Deploy and wait for the web service to become live.
-6. Point the frontend env `VITE_API_URL` to the Render backend URL.
+## AI/ML And Data Science Handoff
 
-The API health endpoint is `/health`.
+The Express API currently uses a deterministic recommendation service so the app can be demonstrated end to end. The AI team can replace or augment the service behind the same contract with:
 
-### Deploy backend to your own server
+- TensorFlow model export (`.keras` or SavedModel)
+- Inference service through Flask/FastAPI
+- Generative AI as a secondary feature for roadmap explanation
+- TensorBoard logs and model evaluation artifacts
 
-If you already have your own VPS or server, use the Docker Compose path instead of Render.
+The Data Science team can connect their outputs through dashboard-ready artifacts:
 
-Files:
-- `apps/api/Dockerfile`
-- `docker-compose.backend.yml`
-- `apps/api/server.env.example`
-- `deploy/nginx-skillmap-api.conf.example`
-
-Recommended topology:
-- `api` container for Flask + gunicorn
-- `postgres` container for shared project data
-- Nginx on the host as reverse proxy
-- optional domain such as `api.your-domain.com`
-
-Basic steps on the server:
-
-1. Clone the repository.
-2. Copy `apps/api/server.env.example` to `apps/api/server.env`.
-3. Set a strong Postgres password in both:
-   - `apps/api/server.env`
-   - `docker-compose.backend.yml`
-4. Start services:
-   `docker compose -f docker-compose.backend.yml up -d --build`
-5. Check API:
-   `curl http://localhost:3001/health`
-6. Configure Nginx using `deploy/nginx-skillmap-api.conf.example`.
-7. Point the frontend `VITE_API_URL` to your public API domain.
-
-Notes:
-- Do not expose PostgreSQL publicly unless you really need it.
-- `CORS_ORIGIN` should be your frontend domain in production, not `*`.
-- The backend auto-creates tables when `AUTO_CREATE_TABLES=true`.
-
-## API flow
-
-1. User uploads a CV through the web app.
-2. Flask API runs temporary rule-based analysis logic for the MVP.
-3. API can persist CV analysis and quiz submissions when PostgreSQL is configured.
-4. Frontend renders the analysis in the dashboard.
-
-## API endpoints
-
-- `GET /health`
-- `POST /api/cv/upload`
-- `GET /api/quiz/questions`
-- `POST /api/quiz/submit`
-- `GET /api/dashboard/overview`
-
-## Database persistence
-
-The API writes CV analysis and quiz submissions to PostgreSQL when `DATABASE_URL` is available. If the database is not configured, the API still serves the same JSON responses so the MVP stays usable.
-
-## Notes
-
-- The repository is intentionally full-stack first because AI and DS components are not ready yet.
-- When the AI team starts integration, `services/ai` can be activated as a separate service without changing the frontend contract.
-
+- Data dictionary
+- EDA visualizations
+- Feature engineering outputs
+- A/B testing results
+- Streamlit dashboard URL
+- Final technical report PDF

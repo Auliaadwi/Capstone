@@ -2,13 +2,23 @@
   "technology": [
     {
       "id": "tq1",
-      "prompt": "Seberapa nyaman kamu menggunakan JavaScript untuk membangun fitur interaktif?",
-      "options": ["Pemula", "Paham dasar", "Mahir", "Ahli"]
+      "prompt": "Seberapa nyaman kamu membangun fitur web interaktif dengan JavaScript?",
+      "options": ["Belum pernah", "Paham dasar", "Sering praktik", "Mampu memimpin implementasi"]
     },
     {
       "id": "tq2",
-      "prompt": "Pernahkah kamu deploy aplikasi web ke platform hosting?",
-      "options": ["Tidak pernah", "Percobaan sekali", "Beberapa kali", "Sering"]
+      "prompt": "Seberapa siap kamu membuat REST API dengan validasi dan error handling?",
+      "options": ["Belum siap", "Masih belajar", "Cukup siap", "Sangat siap"]
+    },
+    {
+      "id": "tq3",
+      "prompt": "Bagaimana pengalamanmu menggunakan database relasional?",
+      "options": ["Belum pernah", "Query dasar", "Desain tabel sederhana", "Optimasi dan relasi kompleks"]
+    },
+    {
+      "id": "tq4",
+      "prompt": "Pernahkah kamu deploy aplikasi web dan mengatur environment variable produksi?",
+      "options": ["Belum pernah", "Percobaan sekali", "Beberapa kali", "Sudah terbiasa"]
     }
   ],
   "design": [

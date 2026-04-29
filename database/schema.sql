@@ -40,3 +40,10 @@ CREATE TABLE quiz_attempts (
   result JSONB NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE leads (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  target_role VARCHAR(120),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
