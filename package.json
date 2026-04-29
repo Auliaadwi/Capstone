@@ -1,0 +1,15 @@
+{
+  "name": "skillmap",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace apps/api",
+    "dev:web": "npm run dev --workspace apps/web",
+    "start:api": "npm run start --workspace apps/api",
+    "build:web": "npm run build --workspace apps/web"
+  }
+}
