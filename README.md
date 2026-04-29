@@ -51,6 +51,24 @@ Create `apps/web/.env` from `apps/web/.env.example` if you want to override the 
 - Static hosting like GitHub Pages is fine for the frontend only, but the API must be deployed separately.
 - Keep `VITE_API_URL` pointed to the deployed Flask API.
 
+### Deploy backend to Render
+
+This repository includes a `render.yaml` Blueprint for the backend API and a shared Postgres database.
+
+1. Push the latest code to GitHub.
+2. Open this Blueprint link in Render:
+   `https://dashboard.render.com/blueprint/new?repo=https://github.com/Arapemula/SkillMap`
+3. Review the generated resources:
+   - web service: `skillmap-api`
+   - postgres database: `skillmap-db`
+4. Set `CORS_ORIGIN` in Render.
+   - Temporary broad access for MVP: `*`
+   - Better once frontend is deployed: `https://your-frontend-domain`
+5. Deploy and wait for the web service to become live.
+6. Point the frontend env `VITE_API_URL` to the Render backend URL.
+
+The API health endpoint is `/health`.
+
 ## API flow
 
 1. User uploads a CV through the web app.

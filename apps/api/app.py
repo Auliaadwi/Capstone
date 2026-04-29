@@ -19,6 +19,14 @@ def build_fallback_text(filename: str) -> str:
     return f"{filename} react flask sql portfolio deployment"
 
 
+def get_cors_origins():
+    raw = os.getenv("CORS_ORIGIN", "http://localhost:5173")
+    if raw.strip() == "*":
+        return "*"
+
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
+
 def get_uploaded_file_size() -> int:
     uploaded_file = request.files.get("cv")
     if not uploaded_file or not uploaded_file.stream:
@@ -35,8 +43,8 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
-    cors_origin = os.getenv("CORS_ORIGIN", "http://localhost:5173")
-    CORS(app, resources={r"/api/*": {"origins": [cors_origin]}, r"/health": {"origins": [cors_origin]}})
+    cors_origins = get_cors_origins()
+    CORS(app, resources={r"/api/*": {"origins": cors_origins}, r"/health": {"origins": cors_origins}})
 
     init_database()
 
