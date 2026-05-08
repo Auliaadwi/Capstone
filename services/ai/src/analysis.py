@@ -37,6 +37,25 @@ def normalize_text(value: str = "") -> str:
     return value.lower()
 
 
+ROLE_PROFILES = [
+    {
+        "id": "fullstack-web-developer",
+        "name": "Junior Full-Stack Web Developer",
+        "required_skills": ["javascript", "react", "express", "rest", "sql", "deployment"],
+    },
+    {
+        "id": "ai-engineer",
+        "name": "Junior AI Engineer",
+        "required_skills": ["python", "tensorflow", "nlp", "model", "keras"],
+    },
+    {
+        "id": "data-scientist",
+        "name": "Junior Data Scientist",
+        "required_skills": ["python", "data", "eda", "feature", "streamlit"],
+    },
+]
+
+
 def analyze_cv_text(input_text: str = "", domain: str = "technology") -> dict:
     text = normalize_text(input_text)
     detected_skills = []
@@ -46,20 +65,39 @@ def analyze_cv_text(input_text: str = "", domain: str = "technology") -> dict:
             detected_skills.append(skill)
 
     extracted_skills = detected_skills or ["Communication", "Problem Solving"]
+
+    # Calculate match score for each role
+    job_matches = []
+    for role in ROLE_PROFILES:
+        matched = sum(1 for s in role["required_skills"] if s in text)
+        total = len(role["required_skills"])
+        score = max(35, min(95, round((matched / max(total, 1)) * 100)))
+        job_matches.append({
+            "id": role["id"],
+            "name": role["name"],
+            "matchScore": score,
+        })
+
+    job_matches.sort(key=lambda r: r["matchScore"], reverse=True)
+    best = job_matches[0]
+
     default_gaps = ["portfolio", "system design", "deployment"]
     skill_gap = [gap for gap in default_gaps if gap not in text]
 
     return {
         "extractedSkills": extracted_skills,
+        "jobMatches": job_matches,
+        "suggestedRoleId": best["id"],
         "skillGap": skill_gap,
         "recommendation": [
-            f"Study core topics for {domain}",
+            f"Study core topics for {best['name']}",
             "Build at least one end-to-end project",
             "Document the project and publish it in your portfolio",
         ],
         "confidence": 0.85 if detected_skills else 0.45,
         "domain": domain,
     }
+
 
 
 def get_quiz_questions(domain: str = "technology") -> list:

@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node src/server.js",
-    "start": "node src/server.js"
+    "dev": "flask --app src.app run --port 3001 --reload",
+    "start": "flask --app src.app run --port 3001"
   },
   "dependencies": {
     "cors": "^2.8.5",

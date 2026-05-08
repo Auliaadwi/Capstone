@@ -575,10 +575,19 @@ a {
 }
 
 .journey-card h3 {
-  margin: 34px 0 18px;
-  font-size: 1.55rem;
+  margin: 14px 0 18px;
+  font-size: 1.35rem;
   font-weight: 950;
   text-shadow: 2px 2px 0 #000;
+}
+
+.card-step-num {
+  margin-top: 28px;
+  color: var(--accent-strong);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
 }
 
 .journey-card p {
@@ -655,6 +664,11 @@ a {
 
 .section-heading.compact {
   margin-bottom: 34px;
+}
+
+.workspace-content {
+  max-width: 860px;
+  margin: 0 auto;
 }
 
 .workspace-grid {
@@ -1053,6 +1067,197 @@ a {
 
 .site-footer a:hover {
   color: var(--accent-strong);
+}
+
+/* ─── Step Indicator ─────────────────────────────── */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  max-width: 860px;
+  margin: 0 auto 36px;
+  padding: 0 clamp(22px, 3vw, 36px);
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.step-item:last-child {
+  flex: 0 0 auto;
+}
+
+.step-dot {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(125, 226, 222, 0.25);
+  border-radius: 999px;
+  background: rgba(5, 18, 24, 0.6);
+  color: var(--dim);
+  font-size: 0.75rem;
+  font-weight: 900;
+  transition: border-color 0.3s, background 0.3s, color 0.3s;
+}
+
+.step-dot.active {
+  border-color: var(--accent);
+  background: rgba(9, 213, 184, 0.18);
+  color: var(--accent-strong);
+  box-shadow: 0 0 14px rgba(9, 213, 184, 0.25);
+}
+
+.step-dot.done {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #041715;
+}
+
+.step-label {
+  display: none;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+.step-label.active {
+  display: block;
+  color: var(--accent-strong);
+}
+
+.step-conn {
+  flex: 1;
+  height: 2px;
+  background: rgba(125, 226, 222, 0.15);
+  border-radius: 999px;
+  transition: background 0.3s;
+}
+
+.step-conn.done {
+  background: var(--accent);
+}
+
+/* ─── Job Match Panel ─────────────────────────────── */
+.match-panel {
+  animation: fadeUp 0.4s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.match-list {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+}
+
+.match-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid rgba(125, 226, 222, 0.15);
+  border-radius: 8px;
+  background: rgba(5, 18, 24, 0.4);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  animation: fadeUp 0.35s ease both;
+}
+
+.match-row:hover {
+  border-color: rgba(12, 232, 209, 0.35);
+  transform: translateX(3px);
+}
+
+.match-row.selected {
+  border-color: rgba(12, 232, 209, 0.65);
+  background: rgba(9, 213, 184, 0.1);
+  box-shadow: 0 0 18px rgba(9, 213, 184, 0.1);
+}
+
+.match-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.match-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  animation: barGrow 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: left;
+}
+
+@keyframes barGrow {
+  from { width: 0 !important; }
+}
+
+.match-pct {
+  color: var(--accent-strong);
+  font-size: 0.95rem;
+  font-weight: 950;
+  min-width: 42px;
+  text-align: right;
+}
+
+.match-name {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 800;
+  min-width: 200px;
+  text-align: right;
+}
+
+/* ─── Upload alt link ─────────────────────────────── */
+.upload-alt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  color: var(--dim);
+  font-size: 0.78rem;
+}
+
+.upload-file-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border: 1px solid rgba(125, 226, 222, 0.22);
+  border-radius: 999px;
+  background: rgba(5, 18, 24, 0.4);
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.upload-file-btn:hover {
+  border-color: rgba(12, 232, 209, 0.5);
+  background: rgba(9, 213, 184, 0.1);
+}
+
+/* ─── Reset button ────────────────────────────────── */
+.reset-btn {
+  width: 100%;
+  margin-top: 16px;
+  min-height: 52px;
+  gap: 10px;
 }
 
 @media (max-width: 1120px) {
