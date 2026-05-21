@@ -10,6 +10,8 @@ Dokumen ini adalah standar komunikasi (API Contract) antara sistem Web (Full-Sta
 - **URL:** `POST /api/ai/analyze-cv`
 - **Content-Type:** `application/json`
 
+**Catatan implementasi web:** upload CV dari frontend wajib berupa PDF (`.pdf`) lewat `POST /api/cv/upload` dengan `multipart/form-data`. Backend menolak file non-PDF, mengekstrak isi PDF menjadi teks, lalu teks inilah yang dikirim/dibaca oleh AI.
+
 ### 📥 Request Body (Dari Web ke AI)
 Web akan mengirimkan teks CV mentah (hasil OCR atau parse PDF di backend utama) ke AI.
 ```json
@@ -26,6 +28,14 @@ AI wajib mengembalikan daftar skill yang terdeteksi, serta rekomendasi role/peke
   "status": "success",
   "data": {
     "extractedSkills": ["React", "Node.js", "Python", "Express"],
+    "jobMatches": [
+      {
+        "id": "project-manager-digital",
+        "name": "Junior Project Manager Digital",
+        "matchScore": 80,
+        "matchedSkills": ["Time Management", "Communication", "Problem Solving"]
+      }
+    ],
     "suggestedRoleId": "fullstack-web-developer",
     "targetRole": "Junior Full-Stack Web Developer",
     "readinessScore": 75,
@@ -45,6 +55,18 @@ AI wajib mengembalikan daftar skill yang terdeteksi, serta rekomendasi role/peke
 }
 ```
 *(Catatan buat AI: Array `roadmap` dan `skillGap` difilter berdasarkan role yang skor kecocokannya paling tinggi).*
+
+### Response Tambahan dari Backend Web
+Endpoint `POST /api/cv/upload` juga mengembalikan teks hasil ekstraksi PDF agar frontend bisa menampilkan output yang dibaca AI.
+```json
+{
+  "fileName": "cv.pdf",
+  "fileSize": 120000,
+  "sourceFormat": "pdf",
+  "extractedCvText": "Teks CV hasil parsing PDF...",
+  "aiReadableText": "Biodata user...\n\nTeks CV hasil parsing PDF..."
+}
+```
 
 ---
 
@@ -74,6 +96,34 @@ AI wajib menghitung ulang `readinessScore` (Kesiapan) berdasarkan bobot CV dan K
     "readinessScore": 78,
     "readinessLabel": "nearly ready",
     "skillGap": ["PostgreSQL", "Deployment", "Testing"],
+    "careerRecommendation": {
+      "title": "Junior Full-Stack Web Developer",
+      "summary": "Kamu paling dekat dengan jalur Junior Full-Stack Web Developer.",
+      "nextSteps": ["Rapikan CV", "Buat studi kasus proyek", "Latih cerita interview"]
+    },
+    "courseRecommendations": [
+      {
+        "skill": "PostgreSQL",
+        "platform": "freeCodeCamp",
+        "title": "Relational Database Certification",
+        "url": "https://www.freecodecamp.org/learn/relational-database",
+        "reason": "Menutup gap sebelum mengambil rekomendasi karier utama."
+      },
+      {
+        "skill": "Deployment",
+        "platform": "AWS Skill Builder",
+        "title": "AWS Cloud Practitioner Essentials",
+        "url": "https://explore.skillbuilder.aws/learn/course/external/view/elearning/134/aws-cloud-practitioner-essentials",
+        "reason": "Mengenalkan cloud dan deployment sebelum publish project."
+      },
+      {
+        "skill": "Communication",
+        "platform": "TOEFL Preparation",
+        "title": "TOEFL Speaking and Professional Communication",
+        "url": "https://www.ets.org/toefl/test-takers/ibt/prepare.html",
+        "reason": "Memperkuat bahasa Inggris dan komunikasi profesional."
+      }
+    ],
     "roadmap": [
       {
         "id": "step-1",

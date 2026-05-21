@@ -1,15 +1,15 @@
 {
   "user": {
     "name": "Demo User",
-    "role": "SkillMap Explorer"
+    "role": "Pengguna SkillMap"
   },
   "skillScore": 76,
-  "targetRole": "Junior Fullstack Developer",
-  "strengths": ["JavaScript", "React", "Problem Solving"],
+  "targetRole": "Pengembang Web Full-Stack Junior",
+  "strengths": ["JavaScript", "React", "Pemecahan Masalah"],
   "gaps": ["Express", "PostgreSQL", "Deployment"],
   "roadmap": [
-    "Create Express routes for upload CV, quiz, recommendations, and dashboard data",
-    "Persist users, CV analysis, quiz attempts, and learning paths in PostgreSQL",
-    "Deploy frontend and API, then connect production environment variables"
+    "Buat route Express untuk unggah CV, kuis, rekomendasi, dan data dasbor",
+    "Simpan data pengguna, analisis CV, percobaan kuis, dan jalur belajar di PostgreSQL",
+    "Deploy frontend dan API, lalu hubungkan environment variable produksi"
   ]
 }

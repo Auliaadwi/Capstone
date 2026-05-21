@@ -53,6 +53,11 @@ ROLE_PROFILES = [
         "name": "Junior Data Scientist",
         "required_skills": ["python", "data", "eda", "feature", "streamlit"],
     },
+    {
+        "id": "project-manager-digital",
+        "name": "Junior Project Manager Digital",
+        "required_skills": ["time management", "leadership", "communication", "project planning", "problem solving", "risk management"],
+    },
 ]
 
 

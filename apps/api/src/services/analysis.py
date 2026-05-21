@@ -1,7 +1,17 @@
 import json
 import os
+from io import BytesIO
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+try:
+    from pypdf import PdfReader
+except Exception:
+    PdfReader = None
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIRS = [
+    os.path.join(BASE_DIR, "..", "data"),
+    os.path.join(BASE_DIR, "..", "..", "..", "..", "services", "ai", "src", "data"),
+]
 
 DEFAULT_TAXONOMIES = {
     "technology": {
@@ -12,7 +22,11 @@ DEFAULT_TAXONOMIES = {
         "PostgreSQL": ["postgres", "postgresql", "sql", "database"],
         "TensorFlow": ["tensorflow", "keras", "deep learning"],
         "NLP": ["nlp", "natural language", "text classification"],
-        "Deployment": ["deployment", "deploy", "vercel", "netlify", "render"]
+        "Deployment": ["deployment", "deploy", "vercel", "netlify", "render"],
+        "Time Management": ["time management", "manajemen waktu", "atur waktu", "deadline", "prioritas"],
+        "Leadership": ["leadership", "kepemimpinan", "lead", "koordinasi", "memimpin"],
+        "Project Planning": ["project planning", "perencanaan proyek", "timeline", "milestone", "sprint"],
+        "Risk Management": ["risk management", "manajemen risiko", "risiko", "mitigasi"]
     }
 }
 
@@ -63,6 +77,15 @@ ROLE_PROFILES = [
         "requiredSkills": ["Python", "Data Wrangling", "EDA", "Feature Engineering", "A/B Testing", "Streamlit"],
         "businessGoal": "Mampu mengubah dataset CV, job description, dan quiz menjadi insight siap dashboard.",
         "marketSignals": ["data cleaning", "business questions", "explanatory analysis", "interactive dashboard"]
+    },
+    {
+        "id": "project-manager-digital",
+        "name": "Junior Project Manager Digital",
+        "domain": "business",
+        "audience": "Fresh graduates yang kuat di koordinasi, organisasi, dan komunikasi tim",
+        "requiredSkills": ["Time Management", "Leadership", "Communication", "Project Planning", "Problem Solving", "Risk Management"],
+        "businessGoal": "Siap masuk role coordinator, management trainee, atau junior project manager.",
+        "marketSignals": ["time management", "team coordination", "timeline ownership", "risk tracking"]
     }
 ]
 
@@ -84,15 +107,158 @@ ROADMAP_BY_SKILL = {
     "EDA": "Create visual analysis of skill distributions and role demand patterns.",
     "Feature Engineering": "Create role-skill match, quiz readiness, and gap severity features.",
     "A/B Testing": "Run a Python A/B test for two recommendation presentation variants.",
-    "Streamlit": "Deploy an interactive Streamlit dashboard for data insight and conclusions."
+    "Streamlit": "Deploy an interactive Streamlit dashboard for data insight and conclusions.",
+    "Time Management": "Latih pembagian prioritas mingguan, deadline tracking, dan refleksi progres harian.",
+    "Leadership": "Ambil peran kecil sebagai koordinator tim dan dokumentasikan cara kamu membagi tugas.",
+    "Communication": "Latih update progres singkat, notulen meeting, dan cara menyampaikan risiko ke stakeholder.",
+    "Project Planning": "Buat timeline proyek sederhana dengan milestone, owner, status, dan risiko.",
+    "Problem Solving": "Dokumentasikan masalah, opsi solusi, keputusan, dan hasil dari satu proyek kecil.",
+    "Risk Management": "Buat risk register sederhana untuk proyek tim atau capstone."
+}
+
+COURSE_BY_SKILL = {
+    "JavaScript": {
+        "platform": "Dicoding",
+        "title": "Belajar Dasar Pemrograman JavaScript",
+        "url": "https://www.dicoding.com/academies/256-belajar-dasar-pemrograman-javascript",
+        "reason": "Cocok untuk memperkuat dasar logika, DOM, dan interaksi web sebelum lanjut React."
+    },
+    "React": {
+        "platform": "Dicoding",
+        "title": "Belajar Membuat Aplikasi Web dengan React",
+        "url": "https://www.dicoding.com/academies/403-belajar-membuat-aplikasi-web-dengan-react",
+        "reason": "Relevan untuk menutup gap frontend modern dan membuat portofolio aplikasi."
+    },
+    "Express": {
+        "platform": "Dicoding",
+        "title": "Belajar Membuat Aplikasi Back-End untuk Pemula",
+        "url": "https://www.dicoding.com/academies/261-belajar-back-end-pemula-dengan-javascript",
+        "reason": "Membantu memahami server, routing, API, dan pola backend dasar."
+    },
+    "REST API": {
+        "platform": "Postman Academy",
+        "title": "API Fundamentals Student Expert",
+        "url": "https://academy.postman.com/",
+        "reason": "Langsung relevan untuk membuat endpoint, request-response, validasi, dan error handling."
+    },
+    "PostgreSQL": {
+        "platform": "freeCodeCamp",
+        "title": "Relational Database Certification",
+        "url": "https://www.freecodecamp.org/learn/relational-database",
+        "reason": "Membantu memahami SQL, relasi tabel, dan database relasional untuk aplikasi kerja."
+    },
+    "Deployment": {
+        "platform": "AWS Skill Builder",
+        "title": "AWS Cloud Practitioner Essentials",
+        "url": "https://explore.skillbuilder.aws/learn/course/external/view/elearning/134/aws-cloud-practitioner-essentials",
+        "reason": "Cocok untuk mengenal cloud, deployment, dan istilah produksi sebelum publish project."
+    },
+    "Testing": {
+        "platform": "Dicoding",
+        "title": "Belajar Dasar Quality Assurance",
+        "url": "https://www.dicoding.com/academies/list",
+        "reason": "Membantu membangun kebiasaan testing dan validasi fitur sebelum melamar."
+    },
+    "Python": {
+        "platform": "Dicoding",
+        "title": "Memulai Pemrograman dengan Python",
+        "url": "https://www.dicoding.com/academies/list",
+        "reason": "Cocok untuk dasar scripting, data, dan fondasi AI/Data Science."
+    },
+    "TensorFlow": {
+        "platform": "DeepLearning.AI",
+        "title": "TensorFlow Developer Professional Certificate",
+        "url": "https://www.deeplearning.ai/courses/tensorflow-developer-professional-certificate/",
+        "reason": "Membantu memahami training model, evaluasi, dan deployment model sederhana."
+    },
+    "NLP": {
+        "platform": "Coursera",
+        "title": "Natural Language Processing Specialization",
+        "url": "https://www.coursera.org/specializations/natural-language-processing",
+        "reason": "Relevan untuk ekstraksi skill dari CV dan pemrosesan teks."
+    },
+    "Model Evaluation": {
+        "platform": "Google Cloud Skills Boost",
+        "title": "Machine Learning Evaluation Basics",
+        "url": "https://www.cloudskillsboost.google/",
+        "reason": "Membantu membaca metrik model dan memilih model yang layak dipakai."
+    },
+    "Data Wrangling": {
+        "platform": "DQLab",
+        "title": "Data Analyst Career Track",
+        "url": "https://dqlab.id/",
+        "reason": "Cocok untuk latihan cleaning, transformasi data, dan workflow analisis."
+    },
+    "EDA": {
+        "platform": "DQLab",
+        "title": "Exploratory Data Analysis with Python",
+        "url": "https://dqlab.id/",
+        "reason": "Membantu mengubah dataset menjadi insight yang bisa dijelaskan."
+    },
+    "Feature Engineering": {
+        "platform": "Kaggle Learn",
+        "title": "Feature Engineering",
+        "url": "https://www.kaggle.com/learn/feature-engineering",
+        "reason": "Cocok untuk memahami cara membuat fitur yang meningkatkan kualitas model."
+    },
+    "A/B Testing": {
+        "platform": "Coursera",
+        "title": "A/B Testing and Experimentation",
+        "url": "https://www.coursera.org/search?query=a%2Fb%20testing",
+        "reason": "Membantu memahami eksperimen produk dan pengambilan keputusan berbasis data."
+    },
+    "Streamlit": {
+        "platform": "freeCodeCamp",
+        "title": "Streamlit Dashboard Tutorial",
+        "url": "https://www.freecodecamp.org/news/tag/streamlit/",
+        "reason": "Cocok untuk membuat dashboard data yang bisa langsung didemokan."
+    },
+    "Time Management": {
+        "platform": "Coursera",
+        "title": "Manajemen Waktu dan Prioritas Kerja",
+        "url": "https://www.coursera.org/search?query=time%20management",
+        "reason": "Membantu membangun kebiasaan deadline tracking sebelum masuk role manager."
+    },
+    "Leadership": {
+        "platform": "LinkedIn Learning",
+        "title": "Dasar Kepemimpinan dan Koordinasi Tim",
+        "url": "https://www.linkedin.com/learning/topics/leadership-and-management",
+        "reason": "Cocok untuk melatih cara membagi tugas dan menjaga komunikasi tim."
+    },
+    "Communication": {
+        "platform": "TOEFL Preparation",
+        "title": "TOEFL Speaking and Professional Communication",
+        "url": "https://www.ets.org/toefl/test-takers/ibt/prepare.html",
+        "reason": "Membantu memperkuat bahasa Inggris, presentasi, dan komunikasi profesional."
+    },
+    "Project Planning": {
+        "platform": "Coursera",
+        "title": "Google Project Management: Foundations",
+        "url": "https://www.coursera.org/learn/project-management-foundations",
+        "reason": "Langsung relevan untuk role coordinator atau junior project manager."
+    },
+    "Problem Solving": {
+        "platform": "Dicoding",
+        "title": "Memulai Dasar Pemrograman untuk Menjadi Pengembang Software",
+        "url": "https://www.dicoding.com/academies/list",
+        "reason": "Membantu melatih pola pikir problem solving, breakdown masalah, dan solusi bertahap."
+    },
+    "Risk Management": {
+        "platform": "PMI",
+        "title": "Project Risk Management Basics",
+        "url": "https://www.pmi.org/learning/training-development",
+        "reason": "Membantu membaca hambatan proyek lebih awal."
+    }
 }
 
 def load_json(filename, fallback):
-    try:
-        with open(os.path.join(DATA_DIR, filename), "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return fallback
+    for data_dir in DATA_DIRS:
+        try:
+            with open(os.path.abspath(os.path.join(data_dir, filename)), "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            continue
+    return fallback
 
 taxonomies = load_json("taxonomies.json", DEFAULT_TAXONOMIES)
 quiz_bank = load_json("quizBank.json", DEFAULT_QUIZ_BANK)
@@ -165,6 +331,37 @@ def build_recommendation_texts(roadmap, role_profile):
         "Publish progress as portfolio evidence for recruiters."
     ]
 
+def create_career_recommendation(role_profile, readiness_score):
+    entry_label = "langsung mulai melamar role junior" if readiness_score >= 75 else "mulai dari magang, trainee, atau project assistant"
+    return {
+        "title": role_profile["name"],
+        "summary": f"Kamu paling dekat dengan jalur {role_profile['name']}; {entry_label} sambil memperkuat bukti portofolio.",
+        "nextSteps": [
+            f"Siapkan CV yang menonjolkan skill inti: {', '.join(role_profile.get('requiredSkills', [])[:3])}.",
+            "Buat satu studi kasus singkat dari proyek, organisasi, magang, atau capstone.",
+            "Latih cerita interview dengan format masalah, aksi, hasil, dan pelajaran."
+        ]
+    }
+
+def create_course_recommendations(skill_gaps, role_profile):
+    focus_skills = skill_gaps[:4] if skill_gaps else role_profile.get("requiredSkills", [])[:3]
+    courses = []
+
+    for skill in focus_skills:
+        default_course = {
+            "platform": "Dicoding / Coursera",
+            "title": f"Dasar {skill} untuk Karier Entry-Level",
+            "url": "https://www.coursera.org/search?query=career%20skills",
+            "reason": f"Menutup gap {skill} dengan materi terstruktur sebelum mengambil rekomendasi karier utama."
+        }
+        course = COURSE_BY_SKILL.get(skill, default_course)
+        courses.append({
+            "skill": skill,
+            **course
+        })
+
+    return courses
+
 def calculate_readiness_score(extracted_skills, required_skills, quiz_score=None):
     required_set = {skill.lower() for skill in required_skills}
     matched_count = sum(1 for skill in extracted_skills if skill.lower() in required_set)
@@ -185,23 +382,45 @@ def readiness_label(score):
 def get_role_profiles():
     return ROLE_PROFILES
 
+def extract_pdf_text(file_obj):
+    if PdfReader is None:
+        raise ValueError("PDF parser belum terpasang. Jalankan `pip install pypdf` atau install requirements backend.")
+
+    file_data = file_obj.get("buffer", b"")
+    try:
+        reader = PdfReader(BytesIO(file_data))
+        page_texts = []
+        for page in reader.pages:
+            text = page.extract_text() or ""
+            if text.strip():
+                page_texts.append(text.strip())
+        extracted_text = "\n\n".join(page_texts).strip()
+    except Exception as exc:
+        raise ValueError("File PDF gagal dibaca. Pastikan PDF tidak rusak atau bukan hasil scan gambar.") from exc
+
+    if not extracted_text:
+        raise ValueError("Teks tidak ditemukan di PDF. Gunakan PDF berbasis teks, bukan scan gambar.")
+
+    return extracted_text
+
 def extract_text_from_upload(file_obj=None, body=None):
     if body is None:
         body = {}
-        
-    if body.get("text") and str(body["text"]).strip():
-        return str(body["text"])
+
+    body_text = str(body.get("text", "")).strip()
 
     if file_obj:
-        file_data = file_obj.get("buffer", b"")
         mimetype = file_obj.get("mimetype", "")
         originalname = file_obj.get("originalname", "")
-        
-        if mimetype.startswith("text/") or originalname.lower().endswith(".txt"):
-            try:
-                return file_data.decode("utf-8")
-            except Exception:
-                pass
+
+        if mimetype == "application/pdf" or originalname.lower().endswith(".pdf"):
+            pdf_text = extract_pdf_text(file_obj)
+            return "\n\n".join([body_text, pdf_text]).strip() if body_text else pdf_text
+
+        raise ValueError("CV hanya boleh diupload dalam format PDF (.pdf).")
+
+    if body_text:
+        return body_text
 
     return " ".join([
         (file_obj.get("originalname") if file_obj else "uploaded-cv"),
@@ -250,6 +469,8 @@ def analyze_cv_text(input_text="", options=None):
         "suggestedRoleId": best_match["id"],
         "skillGap": skill_gap,
         "recommendation": build_recommendation_texts(roadmap, best_role_profile),
+        "careerRecommendation": create_career_recommendation(best_role_profile, best_match["matchScore"]),
+        "courseRecommendations": create_course_recommendations(skill_gap, best_role_profile),
         "roadmap": roadmap,
         "readinessScore": best_match["matchScore"],
         "readinessLabel": readiness_label(best_match["matchScore"]),
@@ -342,6 +563,8 @@ def create_personalized_recommendation(payload=None):
         "skillGap": skill_gap,
         "roadmap": roadmap,
         "recommendation": build_recommendation_texts(roadmap, role_profile),
+        "careerRecommendation": create_career_recommendation(role_profile, readiness_score),
+        "courseRecommendations": create_course_recommendations(skill_gap, role_profile),
         "marketSignals": role_profile.get("marketSignals")
     }
 

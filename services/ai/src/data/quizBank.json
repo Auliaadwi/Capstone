@@ -7,7 +7,7 @@
     },
     {
       "id": "tq2",
-      "prompt": "Seberapa siap kamu membuat REST API dengan validasi dan error handling?",
+      "prompt": "Seberapa siap kamu membuat REST API dengan validasi dan penanganan error?",
       "options": ["Belum siap", "Masih belajar", "Cukup siap", "Sangat siap"]
     },
     {
@@ -19,6 +19,18 @@
       "id": "tq4",
       "prompt": "Pernahkah kamu deploy aplikasi web dan mengatur environment variable produksi?",
       "options": ["Belum pernah", "Percobaan sekali", "Beberapa kali", "Sudah terbiasa"]
+    }
+  ],
+  "business": [
+    {
+      "id": "bq1",
+      "prompt": "Apakah kamu pandai mengatur waktu dan membagi prioritas?",
+      "options": ["NO", "YES"]
+    },
+    {
+      "id": "bq2",
+      "prompt": "Apakah kamu nyaman mengoordinasikan tugas tim?",
+      "options": ["NO", "YES"]
     }
   ],
   "design": [

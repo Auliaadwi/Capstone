@@ -17,7 +17,13 @@
     "EDA": ["eda", "exploratory", "visualization", "analysis"],
     "Feature Engineering": ["feature engineering", "feature extraction"],
     "A/B Testing": ["a/b testing", "ab testing", "experiment"],
-    "Streamlit": ["streamlit", "dashboard"]
+    "Streamlit": ["streamlit", "dashboard"],
+    "Time Management": ["time management", "manajemen waktu", "atur waktu", "deadline", "prioritas"],
+    "Leadership": ["leadership", "kepemimpinan", "lead", "koordinasi", "memimpin"],
+    "Communication": ["communication", "komunikasi", "presentasi", "notulen", "stakeholder"],
+    "Project Planning": ["project planning", "perencanaan proyek", "timeline", "milestone", "sprint"],
+    "Problem Solving": ["problem solving", "pemecahan masalah", "problem", "solusi"],
+    "Risk Management": ["risk management", "manajemen risiko", "risiko", "mitigasi"]
   },
   "design": {
     "UX": ["ux", "user experience", "user research"],

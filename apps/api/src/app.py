@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from src.services.analysis import (
     analyze_cv_text,
     create_personalized_recommendation,
+    extract_pdf_text,
     extract_text_from_upload,
     get_dashboard_snapshot,
     get_quiz_questions,
@@ -39,6 +40,11 @@ CORS(app, origins=cors_origins)
 # Initialize database
 init_database()
 
+def is_pdf_upload(file):
+    filename = (file.filename or "").lower()
+    mimetype = (file.mimetype or "").lower()
+    return filename.endswith(".pdf") or mimetype == "application/pdf"
+
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({
@@ -56,8 +62,12 @@ def roles():
 def cv_upload():
     try:
         domain = request.form.get("domain") or request.args.get("domain") or "technology"
+        target_role = request.form.get("targetRole") or request.args.get("targetRole") or "fullstack-web-developer"
         
         file = request.files.get("cv")
+        if file and not is_pdf_upload(file):
+            return jsonify({"error": "CV hanya boleh diupload dalam format PDF (.pdf)."}), 400
+
         file_obj = None
         if file:
             file_obj = {
@@ -66,11 +76,13 @@ def cv_upload():
                 "buffer": file.read()
             }
             
-        file_name = file.filename if file else "cv.txt"
+        file_name = file.filename if file else "profile-text"
         file_size = len(file_obj["buffer"]) if file_obj else 0
-        
-        extracted_text = extract_text_from_upload(file_obj, request.form.to_dict())
-        analysis = analyze_cv_text(extracted_text, {"domain": domain})
+        form_body = request.form.to_dict()
+        extracted_pdf_text = extract_pdf_text(file_obj) if file_obj else ""
+        body_text = str(form_body.get("text", "")).strip()
+        extracted_text = "\n\n".join([body_text, extracted_pdf_text]).strip() if extracted_pdf_text else extract_text_from_upload(None, form_body)
+        analysis = analyze_cv_text(extracted_text, {"domain": domain, "targetRole": target_role})
 
         save_cv_analysis(
             file_name=file_name,
@@ -81,8 +93,14 @@ def cv_upload():
         return jsonify({
             "fileName": file_name,
             "fileSize": file_size,
+            "sourceFormat": "pdf" if file_obj else "text",
+            "extractedCvText": extracted_pdf_text,
+            "aiReadableText": extracted_text,
             **analysis
         }), 201
+    except ValueError as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
@@ -173,10 +191,12 @@ def project_requirements():
     return jsonify({
         "project": "SkillMap - Navigator Pembelajaran Keterampilan yang Dipersonalisasi",
         "mvpFeatures": [
-            "CV upload and NLP-style skill extraction",
-            "Adaptive readiness quiz",
+            "JobStreet-style biodata capture before CV scanning",
+            "PDF-only CV upload with text extraction for AI scanning",
+            "AI job matching with percentage scores",
+            "YES/NO mini quiz branching",
             "Skill gap mapping against target role",
-            "Personalized learning path recommendation",
+            "Career recommendation or e-course learning option",
             "Result dashboard with persisted activity"
         ],
         "technicalCoverage": {
