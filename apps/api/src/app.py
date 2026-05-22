@@ -1,8 +1,13 @@
 import os
 import traceback
+from pathlib import Path
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
+
+APP_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(APP_DIR / "server.env")
+load_dotenv()
 
 from src.services.analysis import (
     analyze_cv_text,
@@ -14,6 +19,11 @@ from src.services.analysis import (
     get_role_profiles,
     score_quiz
 )
+from src.services.ai_client import (
+    enrich_cv_analysis_with_ai,
+    enrich_recommendation_with_ai,
+    is_ai_service_enabled
+)
 from src.repositories.store import (
     is_database_enabled,
     save_cv_analysis,
@@ -22,8 +32,6 @@ from src.repositories.store import (
     get_latest_activity
 )
 from src.db import init_database
-
-load_dotenv()
 
 app = Flask(__name__)
 port = int(os.getenv("PORT", 3001))
@@ -82,7 +90,12 @@ def cv_upload():
         extracted_pdf_text = extract_pdf_text(file_obj) if file_obj else ""
         body_text = str(form_body.get("text", "")).strip()
         extracted_text = "\n\n".join([body_text, extracted_pdf_text]).strip() if extracted_pdf_text else extract_text_from_upload(None, form_body)
-        analysis = analyze_cv_text(extracted_text, {"domain": domain, "targetRole": target_role})
+        fallback_analysis = analyze_cv_text(extracted_text, {"domain": domain, "targetRole": target_role})
+        analysis = enrich_cv_analysis_with_ai(
+            extracted_text,
+            fallback_analysis,
+            {"domain": domain, "targetRole": target_role}
+        )
 
         save_cv_analysis(
             file_name=file_name,
@@ -136,7 +149,8 @@ def quiz_submit():
 def recommendations():
     try:
         payload = request.json or {}
-        recommendation = create_personalized_recommendation(payload)
+        fallback_recommendation = create_personalized_recommendation(payload)
+        recommendation = enrich_recommendation_with_ai(payload, fallback_recommendation)
         return jsonify(recommendation), 201
     except Exception as e:
         traceback.print_exc()
@@ -202,7 +216,11 @@ def project_requirements():
         "technicalCoverage": {
             "frontend": ["React", "Vite", "Axios networking calls", "responsive mockup and layout"],
             "backend": ["Flask REST API", "RESTful URL convention", "PostgreSQL persistence with memory fallback"],
-            "aiMl": ["TensorFlow-ready model service contract", "skill extraction and recommendation contract"],
+            "aiMl": [
+                "TensorFlow-ready model service contract",
+                "skill extraction and recommendation contract",
+                "external AI service" if is_ai_service_enabled() else "local fallback AI service"
+            ],
             "dataScience": ["dataset/EDA/dashboard integration contract", "business-question driven insights"]
         }
     })
