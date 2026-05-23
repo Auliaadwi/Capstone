@@ -12,3 +12,7 @@ __pycache__
 .postgres-data/
 .postgres.log
 server.env
+.playwright-cli/
+output/
+*-dev.out.log
+*-dev.err.log

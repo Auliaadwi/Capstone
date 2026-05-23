@@ -12,6 +12,8 @@ Core features are aligned with the CC26-PSU401 project plan:
 - Personalized learning path recommendation
 - Dashboard insight for skills, gaps, roadmap, and recent activity
 
+Project limitations and MVP boundaries are documented in [BATASAN.md](BATASAN.md).
+
 ## Stack
 
 - Frontend: React + Vite, Axios networking calls, responsive UI
