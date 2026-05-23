@@ -2,9 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createRecommendation,
   fetchDashboard,
-  fetchProjectRequirements,
   fetchRoles,
-  saveLead,
   uploadCv
 } from './api';
 
@@ -53,7 +51,7 @@ const initialAnalysis = {
   ],
   recommendation: [
     'Fokus pada bukti pengalaman mengatur waktu, koordinasi tim, dan penyelesaian proyek.',
-    'Buat studi kasus singkat dari proyek capstone atau organisasi.',
+    'Buat studi kasus singkat dari proyek pribadi, organisasi, atau magang.',
     'Siapkan cerita interview dengan format masalah, aksi, hasil, dan pelajaran.',
     'Lengkapi gap project planning sebelum melamar role coordinator atau junior project manager.'
   ],
@@ -90,7 +88,7 @@ const initialAnalysis = {
     summary: 'Kamu terlihat dekat dengan jalur Junior Project Manager Digital karena punya sinyal manajemen waktu, komunikasi, dan problem solving.',
     nextSteps: [
       'Siapkan CV yang menonjolkan pengalaman koordinasi dan deadline.',
-      'Buat studi kasus dari proyek capstone, organisasi, atau magang.',
+      'Buat studi kasus dari proyek pribadi, organisasi, atau magang.',
       'Latih cerita interview dengan format masalah, aksi, hasil, dan pelajaran.'
     ]
   },
@@ -119,23 +117,20 @@ const initialAnalysis = {
   ]
 };
 
-const sampleCvText =
-  'Lulusan baru yang pernah menjadi koordinator proyek capstone, mengatur timeline, membagi prioritas tim, membuat notulen, menyelesaikan masalah deadline, serta belajar JavaScript dan React.';
-
 const journeyCards = [
   {
     icon: 'scan',
-    title: 'Biodata ala portal kerja',
+    title: 'Upload CV sebagai sumber utama',
     description:
-      'Pengguna mengisi profil dasar seperti pendidikan, domisili, posisi yang diminati, dan pengalaman singkat.',
-    points: ['Data pelamar terstruktur', 'Konteks sebelum scan CV']
+      'Pengguna mengunggah CV PDF terlebih dahulu agar sistem membaca pengalaman, skill, dan sinyal karier dari dokumen utama.',
+    points: ['CV PDF lebih dulu', 'Dokumen jadi baseline']
   },
   {
     icon: 'brain',
-    title: 'Scan CV berbasis AI',
+    title: 'Profil singkat pelengkap',
     description:
-      'CV dibaca untuk mendeteksi skill, pengalaman, dan sinyal yang cocok dengan kebutuhan pekerjaan.',
-    points: ['Upload CV PDF', 'Ekstraksi teks otomatis']
+      'Profil singkat dipakai hanya untuk menjelaskan hal penting yang belum masuk ke CV, bukan data kontak atau biodata umum.',
+    points: ['Konteks di luar CV', 'Target dan catatan tambahan']
   },
   {
     icon: 'map',
@@ -153,60 +148,54 @@ const journeyCards = [
   },
   {
     icon: 'check',
-    title: 'Dashboard insight capstone',
+    title: 'Dashboard insight karier',
     description:
-      'Dashboard menampilkan skor, kekuatan, gap, roadmap, dan ruang integrasi untuk AI/ML serta Data Science.',
-    points: ['Insight hasil analisis', 'Siap untuk demo tim']
+      'Dashboard menampilkan skor, kekuatan, gap, roadmap, dan rekomendasi belajar yang bisa langsung ditindaklanjuti.',
+    points: ['Insight hasil analisis', 'Siap ambil langkah berikutnya']
   }
 ];
 
-const humanSteps = [
-  {
-    number: '1',
-    title: 'Isi biodata',
-    text: 'Mulai dari data dasar seperti nama, pendidikan, domisili, dan posisi yang diminati.'
-  },
-  {
-    number: '2',
-    title: 'Upload CV',
-    text: 'AI membaca teks dari PDF CV dan menghitung persentase kecocokan pekerjaan.'
-  },
-  {
-    number: '3',
-    title: 'Mini quiz',
-    text: 'Jawaban YES/NO menentukan apakah lanjut ke rekomendasi karier atau pilihan e-course.'
-  }
-];
-
-const barRows = [
-  [52, 70, 43, 86, 61, 74, 48, 92, 67, 58],
-  [28, 45, 66, 37, 82, 54, 77, 34, 72, 49],
-  [62, 31, 58, 79, 46, 68, 88, 40, 73, 55]
+const heroStats = [
+  { value: '3 menit', label: 'alur scan awal' },
+  { value: '5 tahap', label: 'CV sampai dashboard' },
+  { value: 'AI + quiz', label: 'rekomendasi personal' }
 ];
 
 const biodataFields = [
-  { id: 'fullName', label: 'Nama lengkap', placeholder: 'Contoh: Siti Aulia' },
-  { id: 'location', label: 'Domisili', placeholder: 'Jakarta, Bandung, Surabaya...' },
-  { id: 'education', label: 'Pendidikan terakhir', placeholder: 'S1 Informatika, D3 Akuntansi...' },
-  { id: 'major', label: 'Jurusan / bidang', placeholder: 'Sistem Informasi, Manajemen...' },
-  { id: 'expectedPosition', label: 'Posisi yang diminati', placeholder: 'Project Manager, Web Developer...' },
-  { id: 'workMode', label: 'Preferensi kerja', placeholder: 'Remote, hybrid, onsite' },
   {
-    id: 'experience',
-    label: 'Pengalaman singkat',
-    placeholder: 'Ceritakan proyek, organisasi, magang, atau pekerjaan yang pernah kamu lakukan.',
+    id: 'expectedPosition',
+    label: 'Role atau posisi yang ingin dituju',
+    placeholder: 'Contoh: Frontend Developer, Data Analyst, Project Coordinator...',
+    wide: true
+  },
+  {
+    id: 'skills',
+    label: 'Skill atau pengalaman yang belum tertulis di CV',
+    placeholder: 'Contoh: sedang belajar React, pernah koordinasi tim kecil, sedang membuat dashboard data...',
     wide: true,
     multiline: true
+  },
+  {
+    id: 'profileSummary',
+    label: 'Profil singkat tambahan',
+    placeholder: 'Jelaskan konteks penting yang tidak masuk CV: tujuan karier, hal yang sedang dipelajari, minat role, atau pengalaman informal.',
+    wide: true,
+    multiline: true
+  },
+  {
+    id: 'experience',
+    label: 'Catatan tambahan',
+    placeholder: 'Opsional: preferensi belajar, jenis pekerjaan yang dihindari, atau proyek yang belum sempat ditulis di CV.',
+    wide: true,
+    multiline: true,
+    required: false
   }
 ];
 
 const initialBiodata = {
-  fullName: '',
-  location: '',
-  education: '',
-  major: '',
   expectedPosition: '',
-  workMode: '',
+  skills: '',
+  profileSummary: '',
   experience: ''
 };
 
@@ -216,20 +205,35 @@ const yesNoLabels = {
 };
 
 const flowPages = [
-  { id: 'biodata', number: '01', label: 'Biodata', title: 'Biodata pelamar', description: 'Isi data dasar seperti portal lowongan kerja sebelum CV dipindai AI.' },
-  { id: 'cv', number: '02', label: 'Upload CV', title: 'Upload dan scan CV', description: 'Unggah CV PDF, lalu sistem menampilkan teks yang akan dibaca AI.' },
+  { id: 'cv', number: '01', label: 'Upload CV', title: 'Upload CV PDF', description: 'Unggah CV terlebih dahulu sebagai sumber utama analisis.' },
+  { id: 'biodata', number: '02', label: 'Profil Singkat', title: 'Profil singkat tambahan', description: 'Tambahkan informasi penting yang belum tertulis di CV.' },
   { id: 'matches', number: '03', label: 'Job Match', title: 'Rekomendasi pekerjaan', description: 'Lihat pekerjaan yang paling cocok berdasarkan persentase kecocokan.' },
   { id: 'quiz', number: '04', label: 'Mini Quiz', title: 'Mini quiz YES/NO', description: 'Jawab satu pertanyaan untuk menentukan cabang karier atau e-course.' },
-  { id: 'dashboard', number: '05', label: 'Dashboard', title: 'Dashboard personal', description: 'Lihat ringkasan akhir, gap, dan langkah berikutnya.' }
+  { id: 'dashboard', number: '05', label: 'Dashboard', title: 'Dashboard personal', description: 'Lihat gap, skor kesiapan, dan langkah berikutnya.' }
 ];
 
 function getPageFromHash() {
   if (typeof window === 'undefined') {
-    return 'biodata';
+    return 'home';
   }
 
-  const pageId = window.location.hash.replace(/^#\/?/, '') || 'biodata';
-  return flowPages.some((page) => page.id === pageId) ? pageId : 'biodata';
+  const pageId = window.location.hash.replace(/^#\/?/, '') || 'home';
+  if (pageId === 'home') {
+    return 'home';
+  }
+
+  return flowPages.some((page) => page.id === pageId) ? pageId : 'home';
+}
+
+function scrollToLandingSection(sectionId) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const section = document.getElementById(sectionId);
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 function isPdfFile(file) {
@@ -247,12 +251,16 @@ function formatMissingFields(fields) {
 function getPageBlockMessageForState(pageId, guardState) {
   const pageIndex = flowPages.findIndex((page) => page.id === pageId);
 
-  if (pageIndex > 0 && !guardState.isBiodataComplete) {
-    return `Lengkapi semua biodata dulu: ${formatMissingFields(guardState.missingBiodataFields)}.`;
+  if (pageIndex > 0 && !guardState.hasSelectedCv) {
+    return 'Pilih file CV dulu.';
+  }
+
+  if (pageIndex > 1 && !guardState.isBiodataComplete) {
+    return `Lengkapi profil singkat dulu: ${formatMissingFields(guardState.missingBiodataFields)}.`;
   }
 
   if (pageIndex > 1 && !guardState.hasScannedCv) {
-    return 'Upload CV PDF dan jalankan scan dulu sebelum lanjut ke job match.';
+    return 'Jalankan scan dari halaman profil singkat sebelum lanjut ke job match.';
   }
 
   if (pageId === 'dashboard' && !guardState.quizResult) {
@@ -262,15 +270,68 @@ function getPageBlockMessageForState(pageId, guardState) {
   return '';
 }
 
+function inferTargetRoleIdFromProfile(biodata, roles, fallbackId) {
+  const profileText = [
+    getMeaningfulText(biodata.expectedPosition),
+    getMeaningfulText(biodata.skills),
+    getMeaningfulText(biodata.profileSummary),
+    getMeaningfulText(biodata.experience)
+  ]
+    .join(' ')
+    .toLowerCase();
+
+  if (!profileText.trim()) {
+    return fallbackId;
+  }
+
+  const roleKeywords = {
+    'fullstack-web-developer': ['web', 'frontend', 'front-end', 'backend', 'back-end', 'fullstack', 'full-stack', 'react', 'javascript', 'api'],
+    'ai-engineer': ['ai', 'machine learning', 'ml', 'model', 'nlp', 'tensorflow', 'pytorch'],
+    'data-scientist': ['data', 'analyst', 'scientist', 'python', 'eda', 'visualisasi', 'dashboard'],
+    'project-manager-digital': ['project', 'manager', 'coordinator', 'koordinator', 'management', 'timeline', 'leadership', 'komunikasi']
+  };
+
+  const scoredRoles = roles.map((role) => {
+    const normalizedRoleText = [
+      role.id,
+      role.name,
+      ...(role.requiredSkills || [])
+    ]
+      .join(' ')
+      .toLowerCase();
+    const configuredKeywords = roleKeywords[role.id] || [];
+    const keywords = [...configuredKeywords, ...normalizedRoleText.split(/[\s/-]+/).filter((word) => word.length > 3)];
+    const score = keywords.reduce((total, keyword) => (
+      profileText.includes(keyword.toLowerCase()) ? total + 1 : total
+    ), 0);
+
+    return { id: role.id, score };
+  });
+
+  const bestRole = scoredRoles.sort((first, second) => second.score - first.score)[0];
+  return bestRole?.score > 0 ? bestRole.id : fallbackId;
+}
+
+function hasMeaningfulText(value) {
+  return /[\p{L}\p{N}]/u.test(String(value || '').trim());
+}
+
+function getMeaningfulText(value) {
+  const normalizedValue = String(value || '').trim();
+  return hasMeaningfulText(normalizedValue) ? normalizedValue : '';
+}
+
 function formatBiodataText(biodata) {
+  const expectedPosition = getMeaningfulText(biodata.expectedPosition);
+  const skills = getMeaningfulText(biodata.skills);
+  const profileSummary = getMeaningfulText(biodata.profileSummary);
+  const experience = getMeaningfulText(biodata.experience);
+
   return [
-    biodata.fullName && `Nama: ${biodata.fullName}`,
-    biodata.location && `Domisili: ${biodata.location}`,
-    biodata.education && `Pendidikan: ${biodata.education}`,
-    biodata.major && `Jurusan: ${biodata.major}`,
-    biodata.expectedPosition && `Posisi diminati: ${biodata.expectedPosition}`,
-    biodata.workMode && `Preferensi kerja: ${biodata.workMode}`,
-    biodata.experience && `Pengalaman: ${biodata.experience}`
+    expectedPosition && `Role/posisi yang ingin dituju: ${expectedPosition}`,
+    skills && `Skill/pengalaman yang belum tertulis di CV: ${skills}`,
+    profileSummary && `Profil singkat tambahan di luar CV: ${profileSummary}`,
+    experience && `Catatan tambahan: ${experience}`
   ]
     .filter(Boolean)
     .join('\n');
@@ -515,114 +576,10 @@ function Icon({ name, size = 18 }) {
   return null;
 }
 
-function DashboardVisual({ analysis }) {
-  const score = analysis.readinessScore ?? Math.round((analysis.confidence || 0) * 100);
-  const primarySkill = analysis.extractedSkills?.[0] || 'JavaScript';
-  const primaryGap = analysis.skillGap?.[0] || 'Express';
-  const supportingSkills = analysis.extractedSkills?.slice(0, 3) || ['JavaScript', 'React', 'API'];
-  const priorityGaps = analysis.skillGap?.slice(0, 3) || ['Express', 'PostgreSQL', 'Deployment'];
-
-  return (
-    <div className="hero-visual" aria-label="Pratinjau dasbor analisis keterampilan">
-      <div className="visual-frame">
-        <div className="dashboard-screen">
-          <div className="screen-shell">
-            <aside className="visual-sidebar" aria-hidden="true">
-              <span className="mini-logo">SM</span>
-              <span className="sidebar-dot active" />
-              <span className="sidebar-dot" />
-              <span className="sidebar-dot" />
-              <span className="sidebar-line" />
-            </aside>
-
-            <div className="visual-main">
-              <div className="dashboard-topbar">
-                <div>
-                  <span>SkillMap Analytics</span>
-                  <strong>{analysis.targetRole || defaultRole.name}</strong>
-                </div>
-                <span className="status-pill">Live Scan</span>
-              </div>
-
-              <div className="dashboard-grid">
-                <div className="chart-panel large">
-                  <div className="panel-heading">
-                    <span>Perkembangan kesiapan</span>
-                    <strong>+18%</strong>
-                  </div>
-                  <div className="line-chart">
-                    <svg viewBox="0 0 320 170" preserveAspectRatio="none" aria-hidden="true">
-                      <path className="chart-fill" d="M0 132 C42 112 58 82 96 92 C135 104 144 48 184 58 C222 68 239 98 276 58 C298 36 312 30 320 26 L320 170 L0 170 Z" />
-                      <path className="chart-line main" d="M0 132 C42 112 58 82 96 92 C135 104 144 48 184 58 C222 68 239 98 276 58 C298 36 312 30 320 26" />
-                      <path className="chart-line soft" d="M0 108 C40 118 62 128 98 116 C142 102 160 118 196 108 C236 98 256 78 320 92" />
-                    </svg>
-                    <span className="chart-marker one" />
-                    <span className="chart-marker two" />
-                  </div>
-                </div>
-
-                <div className="readiness-meter" style={{ '--meter': `${score * 3.6}deg` }}>
-                  <div className="meter-ring">
-                    <strong>{score}%</strong>
-                    <span>Siap</span>
-                  </div>
-                  <p>CV sudah kuat untuk fondasi, tinggal tutup gap prioritas.</p>
-                </div>
-
-                <div className="skill-stack">
-                  <span className="panel-label-small">Skill terdeteksi</span>
-                  <div>
-                    {supportingSkills.map((skill) => (
-                      <span className="mini-chip" key={skill}>{skill}</span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bar-panel compact">
-                  {barRows[0].map((height, index) => (
-                    <span key={index} style={{ height: `${height}%` }} />
-                  ))}
-                </div>
-
-                <div className="focus-card">
-                  <span className="panel-label-small">Prioritas berikutnya</span>
-                  <strong>{primaryGap}</strong>
-                  <div>
-                    {priorityGaps.map((gap) => (
-                      <span key={gap}>{gap}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="floating-badge skill-badge">
-        <span className="badge-icon">
-          <Icon name="check" size={15} />
-        </span>
-        <strong>Keahlian {primarySkill}</strong>
-        <span>{score}% Siap</span>
-      </div>
-
-      <div className="floating-badge gap-badge">
-        <span className="badge-icon muted">
-          <Icon name="trend" size={16} />
-        </span>
-        <strong>Gap Prioritas</strong>
-        <span>{primaryGap}</span>
-      </div>
-    </div>
-  );
-}
-
 function App() {
   const [roles, setRoles] = useState(fallbackRoles);
   const [targetRole, setTargetRole] = useState(projectManagerRole.id);
   const [dashboard, setDashboard] = useState(null);
-  const [projectRequirements, setProjectRequirements] = useState(null);
   const [biodata, setBiodata] = useState(initialBiodata);
   const [isBiodataSaved, setIsBiodataSaved] = useState(false);
   const [hasScannedCv, setHasScannedCv] = useState(false);
@@ -630,16 +587,14 @@ function App() {
   const [analysis, setAnalysis] = useState(initialAnalysis);
   const [quizResult, setQuizResult] = useState(null);
   const [recommendation, setRecommendation] = useState(null);
-  const [cvText, setCvText] = useState('');
   const [extractedCvText, setExtractedCvText] = useState('');
   const [selectedCvFile, setSelectedCvFile] = useState(null);
   const [showBiodataErrors, setShowBiodataErrors] = useState(false);
   const [showCvErrors, setShowCvErrors] = useState(false);
-  const [email, setEmail] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
   const [currentPage, setCurrentPage] = useState(getPageFromHash);
-  const [statusMessage, setStatusMessage] = useState('Isi biodata terlebih dahulu, lalu upload CV untuk memulai scan AI.');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const activeRole = useMemo(
     () => roles.find((role) => role.id === targetRole) || defaultRole,
@@ -652,11 +607,19 @@ function App() {
   const quizProgress = miniQuizAnswer ? 100 : 0;
   const topStrengths = ((currentInsight.extractedSkills || analysis.extractedSkills)?.length ? (currentInsight.extractedSkills || analysis.extractedSkills) : ['Belajar mandiri']).slice(0, 3);
   const topGaps = ((currentInsight.skillGap || analysis.skillGap)?.length ? (currentInsight.skillGap || analysis.skillGap) : ['Latihan portofolio']).slice(0, 3);
-  const biodataFilledCount = useMemo(
-    () => Object.values(biodata).filter((value) => String(value).trim()).length,
-    [biodata]
+  const expectedPositionText = getMeaningfulText(biodata.expectedPosition);
+  const skillsText = getMeaningfulText(biodata.skills);
+  const profileSummaryText = getMeaningfulText(biodata.profileSummary);
+  const experienceText = getMeaningfulText(biodata.experience);
+  const requiredBiodataFields = useMemo(
+    () => biodataFields.filter((field) => field.required !== false),
+    []
   );
-  const biodataProgress = Math.round((biodataFilledCount / Object.keys(initialBiodata).length) * 100);
+  const biodataFilledCount = useMemo(
+    () => requiredBiodataFields.filter((field) => hasMeaningfulText(biodata[field.id])).length,
+    [biodata, requiredBiodataFields]
+  );
+  const biodataProgress = Math.round((biodataFilledCount / requiredBiodataFields.length) * 100);
   const jobMatches = recommendation?.jobMatches || analysis.jobMatches || [];
   const bestMatch = jobMatches[0] || {
     id: analysis.suggestedRoleId || targetRole,
@@ -664,26 +627,67 @@ function App() {
     matchScore: analysis.readinessScore || 0,
     matchedSkills: analysis.extractedSkills || []
   };
+  const finalReadinessScore = quizResult?.score ?? currentInsight.readinessScore ?? analysis.readinessScore ?? bestMatch.matchScore ?? 0;
   const suggestedRole = roles.find((role) => role.id === (analysis.suggestedRoleId || bestMatch.id || targetRole)) || activeRole;
   const miniQuizQuestion = getMiniQuizQuestion(bestMatch.name || suggestedRole.name);
   const careerRecommendation = currentInsight.careerRecommendation || getFallbackCareerRecommendation(suggestedRole, bestMatch.matchScore);
   const courseRecommendations = currentInsight.courseRecommendations?.length
     ? currentInsight.courseRecommendations.map(withCourseUrl)
     : getFallbackCourseOptions(topGaps).map(withCourseUrl);
-  const capstoneModules = dashboard?.featureModules || projectRequirements?.mvpFeatures || [];
-  const researchQuestions = dashboard?.researchQuestions || [];
+  const dashboardProfileRows = useMemo(
+    () => [
+      { label: 'Target role', value: expectedPositionText },
+      { label: 'Skill tambahan', value: skillsText },
+      { label: 'Catatan', value: experienceText }
+    ].filter((row) => row.value),
+    [expectedPositionText, skillsText, experienceText]
+  );
+  const dashboardSignals = (
+    currentInsight.marketSignals?.length
+      ? currentInsight.marketSignals
+      : activeRole.marketSignals?.length
+        ? activeRole.marketSignals
+        : [...topGaps, ...topStrengths]
+  ).slice(0, 5);
+  const dashboardPrimaryCourse = courseRecommendations[0];
+  const dashboardTrackLabel = miniQuizAnswer === 'yes'
+    ? 'Jalur karier'
+    : miniQuizAnswer === 'no'
+      ? 'Jalur belajar'
+      : 'Insight awal';
+  const dashboardDecisionTitle = miniQuizAnswer === 'yes'
+    ? (careerRecommendation.title || bestMatch.name)
+    : miniQuizAnswer === 'no'
+      ? `Fokus ke ${dashboardPrimaryCourse?.skill || topGaps[0] || 'skill prioritas'} dulu`
+      : (bestMatch.name || activeRole.name);
+  const dashboardDecisionCopy = miniQuizAnswer === 'yes'
+    ? (careerRecommendation.summary || activeRole.businessGoal || analysis.businessGoal)
+    : miniQuizAnswer === 'no'
+      ? `Tutup gap utama lewat latihan kecil dan course yang relevan. Prioritas pertama: ${dashboardPrimaryCourse?.skill || topGaps[0] || 'skill prioritas'}.`
+      : (activeRole.businessGoal || analysis.businessGoal);
+  const dashboardDecisionSupportCopy = miniQuizAnswer === 'yes'
+    ? 'Basisnya sudah cukup. Fokus berikutnya ada di satu gap paling penting lalu ubah jadi bukti kerja.'
+    : miniQuizAnswer === 'no'
+      ? 'Tahan apply dulu. Rapikan fondasi skill utama lalu evaluasi ulang setelah latihan.'
+      : 'Belum ada keputusan akhir sampai mini quiz dijawab.';
+  const dashboardActivityMetrics = dashboard?.activity
+    ? [
+        { label: 'Analisis CV', value: dashboard.activity.cvAnalyses?.length || 0 },
+        { label: 'Hasil quiz', value: dashboard.activity.quizAttempts?.length || 0 }
+      ]
+    : [];
   const activePage = flowPages.find((page) => page.id === currentPage) || flowPages[0];
   const missingBiodataFields = useMemo(
-    () => biodataFields.filter((field) => !String(biodata[field.id] || '').trim()),
-    [biodata]
+    () => requiredBiodataFields.filter((field) => !hasMeaningfulText(biodata[field.id])),
+    [biodata, requiredBiodataFields]
   );
   const missingBiodataIds = useMemo(
     () => new Set(missingBiodataFields.map((field) => field.id)),
     [missingBiodataFields]
   );
   const isBiodataComplete = missingBiodataFields.length === 0;
-  const isCvSummaryFilled = Boolean(cvText.trim());
   const navigationGuard = {
+    hasSelectedCv: Boolean(selectedCvFile),
     isBiodataComplete,
     hasScannedCv,
     quizResult,
@@ -693,20 +697,24 @@ function App() {
   navigationGuardRef.current = navigationGuard;
 
   const getPageBlockMessage = (pageId) => getPageBlockMessageForState(pageId, navigationGuard);
+  const clearStatusMessage = () => setStatusMessage('');
 
   const goToPage = (pageId, options = {}) => {
     if (!options.force) {
       const blockedMessage = getPageBlockMessage(pageId);
       if (blockedMessage) {
-        setStatusMessage(blockedMessage);
-        if (!isBiodataComplete) {
+        clearStatusMessage();
+        if (!selectedCvFile) {
+          setShowCvErrors(true);
+          setCurrentPage('cv');
+          window.history.pushState(null, '', '#/cv');
+        } else if (!isBiodataComplete) {
           setShowBiodataErrors(true);
           setCurrentPage('biodata');
           window.history.pushState(null, '', '#/biodata');
         } else if (!hasScannedCv) {
-          setShowCvErrors(true);
-          setCurrentPage('cv');
-          window.history.pushState(null, '', '#/cv');
+          setCurrentPage('biodata');
+          window.history.pushState(null, '', '#/biodata');
         } else {
           setCurrentPage('quiz');
           window.history.pushState(null, '', '#/quiz');
@@ -717,25 +725,34 @@ function App() {
     }
 
     setCurrentPage(pageId);
+    clearStatusMessage();
     if (window.location.hash !== `#/${pageId}`) {
       window.history.pushState(null, '', `#/${pageId}`);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const goToHomeSection = (sectionId) => {
+    if (currentPage !== 'home') {
+      goToPage('home', { force: true });
+      window.setTimeout(() => scrollToLandingSection(sectionId), 80);
+      return;
+    }
+
+    scrollToLandingSection(sectionId);
+  };
+
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const [rolesResponse, dashboardResponse, requirementsResponse] = await Promise.all([
+        const [rolesResponse, dashboardResponse] = await Promise.all([
           fetchRoles(),
-          fetchDashboard(),
-          fetchProjectRequirements()
+          fetchDashboard()
         ]);
         setRoles(rolesResponse.data.roles?.length ? rolesResponse.data.roles : fallbackRoles);
         setDashboard(dashboardResponse.data);
-        setProjectRequirements(requirementsResponse.data);
       } catch (error) {
-        setStatusMessage(error.message || 'Gagal terhubung ke API SkillMap.');
+        clearStatusMessage();
       }
     };
 
@@ -749,15 +766,18 @@ function App() {
       const blockedMessage = getPageBlockMessageForState(nextPage, guardState);
 
       if (blockedMessage) {
-        setStatusMessage(blockedMessage);
-        if (!guardState.isBiodataComplete) {
+        clearStatusMessage();
+        if (!guardState.hasSelectedCv) {
+          setShowCvErrors(true);
+          setCurrentPage('cv');
+          window.history.replaceState(null, '', '#/cv');
+        } else if (!guardState.isBiodataComplete) {
           setShowBiodataErrors(true);
           setCurrentPage('biodata');
           window.history.replaceState(null, '', '#/biodata');
         } else if (!guardState.hasScannedCv) {
-          setShowCvErrors(true);
-          setCurrentPage('cv');
-          window.history.replaceState(null, '', '#/cv');
+          setCurrentPage('biodata');
+          window.history.replaceState(null, '', '#/biodata');
         } else {
           setCurrentPage('quiz');
           window.history.replaceState(null, '', '#/quiz');
@@ -787,51 +807,55 @@ function App() {
     setRecommendation(null);
     setQuizResult(null);
     setMiniQuizAnswer(null);
+    clearStatusMessage();
   };
 
-  const handleSaveBiodata = () => {
+  const handleSaveBiodata = async () => {
+    if (!selectedCvFile) {
+      setShowCvErrors(true);
+      clearStatusMessage();
+      goToPage('cv', { force: true });
+      return;
+    }
+
     if (!isBiodataComplete) {
       setShowBiodataErrors(true);
-      setStatusMessage(`Semua biodata wajib diisi. Masih kosong: ${formatMissingFields(missingBiodataFields)}.`);
+      clearStatusMessage();
       goToPage('biodata', { force: true });
       return;
     }
 
     setShowBiodataErrors(false);
     setIsBiodataSaved(true);
-    setStatusMessage('Biodata tersimpan. Lanjut upload CV agar AI bisa membaca kecocokan pekerjaan.');
-    goToPage('cv');
+    setTargetRole(inferTargetRoleIdFromProfile(biodata, roles, targetRole));
+    await handleAnalyzeProfile(selectedCvFile);
   };
 
   const handleAnalyzeProfile = async (file = null) => {
-    if (!isBiodataComplete) {
-      setShowBiodataErrors(true);
-      setStatusMessage(`Semua biodata wajib diisi. Masih kosong: ${formatMissingFields(missingBiodataFields)}.`);
-      goToPage('biodata', { force: true });
-      return;
-    }
-
     if (!file) {
       setShowCvErrors(true);
-      setStatusMessage('Upload CV PDF dulu sebelum scan dan lanjut ke job match.');
+      clearStatusMessage();
       goToPage('cv', { force: true });
       return;
     }
 
-    if (!isCvSummaryFilled) {
-      setShowCvErrors(true);
-      setStatusMessage('Ringkasan profil juga wajib diisi sebelum scan CV.');
-      goToPage('cv', { force: true });
+    if (!isBiodataComplete) {
+      setShowBiodataErrors(true);
+      clearStatusMessage();
+      goToPage('biodata', { force: true });
       return;
     }
 
     setIsUploading(true);
     setShowCvErrors(false);
-    setStatusMessage('Memetakan biodata dan CV ke kebutuhan pekerjaan...');
+    clearStatusMessage();
 
     try {
-      const profileText = [formatBiodataText(biodata), cvText].filter(Boolean).join('\n\n');
-      const response = await uploadCv(file, activeRole.domain || 'technology', targetRole, profileText);
+      const profileText = formatBiodataText(biodata);
+      const inferredTargetRole = inferTargetRoleIdFromProfile(biodata, roles, targetRole);
+      const inferredRole = roles.find((role) => role.id === inferredTargetRole) || activeRole;
+      setTargetRole(inferredTargetRole);
+      const response = await uploadCv(file, inferredRole.domain || 'technology', inferredTargetRole, profileText);
       setAnalysis(response.data);
       setExtractedCvText(response.data.extractedCvText || '');
       setRecommendation(null);
@@ -841,12 +865,7 @@ function App() {
       if (response.data.suggestedRoleId) {
         setTargetRole(response.data.suggestedRoleId);
       }
-      const topMatch = response.data.jobMatches?.[0];
-      setStatusMessage(
-        topMatch
-          ? `Scan selesai. Rekomendasi teratas: ${topMatch.name} dengan kecocokan ${topMatch.matchScore}%.`
-          : 'Analisis selesai. Dasbor rekomendasi sudah diperbarui.'
-      );
+      clearStatusMessage();
       goToPage('matches', { force: true });
     } catch (error) {
       setStatusMessage(error.response?.data?.error || error.message || 'Analisis CV gagal. Silakan coba lagi.');
@@ -865,14 +884,6 @@ function App() {
         return;
       }
 
-      if (!isBiodataComplete) {
-        setShowBiodataErrors(true);
-        setStatusMessage(`Lengkapi semua biodata dulu sebelum upload CV. Masih kosong: ${formatMissingFields(missingBiodataFields)}.`);
-        event.target.value = '';
-        goToPage('biodata', { force: true });
-        return;
-      }
-
       setSelectedCvFile(file);
       setHasScannedCv(false);
       setRecommendation(null);
@@ -880,47 +891,20 @@ function App() {
       setMiniQuizAnswer(null);
       setExtractedCvText('');
       setShowCvErrors(false);
-      setStatusMessage(`File ${file.name} siap discan. Klik "Scan CV & Lihat Job Match" untuk lanjut.`);
-      goToPage('cv');
+      clearStatusMessage();
+      goToPage('biodata');
       event.target.value = '';
     }
   };
 
-  const handleTargetRoleChange = (event) => {
-    const nextRole = event.target.value;
-    const role = roles.find((item) => item.id === nextRole);
-    setTargetRole(nextRole);
-    setRecommendation(null);
-    setQuizResult(null);
-    setMiniQuizAnswer(null);
-    if (role) {
-      setAnalysis((current) => ({
-        ...current,
-        targetRole: role.name,
-        targetRoleId: role.id,
-        businessGoal: role.businessGoal,
-        marketSignals: role.marketSignals,
-        skillGap: role.requiredSkills?.slice(0, 4) || current.skillGap,
-        roadmap: (role.requiredSkills || []).slice(0, 3).map((skill, index) => ({
-          id: `${role.id}-preview-${index + 1}`,
-          title: `Validasi ${skill}`,
-          focus: skill,
-          duration: index < 2 ? '1-2 minggu' : '2-3 minggu',
-          action: `Buat latihan atau artefak portofolio kecil yang membuktikan kemampuan ${skill}.`
-        }))
-      }));
-    }
-    setStatusMessage(`Target role diubah ke ${role?.name || 'role pilihan'}. Jalankan analisis agar hasilnya ikut menyesuaikan.`);
-  };
-
   const handleQuizSubmit = async () => {
     if (!miniQuizAnswer) {
-      setStatusMessage('Pilih YES atau NO dulu agar rekomendasi akhirnya bisa ditentukan.');
+      clearStatusMessage();
       return;
     }
 
     setIsSubmittingQuiz(true);
-    setStatusMessage('Membaca jawaban mini quiz dan memperbarui rekomendasi akhir...');
+    clearStatusMessage();
 
     try {
       const baseScore = bestMatch.matchScore ?? analysis.readinessScore ?? 0;
@@ -948,12 +932,8 @@ function App() {
         jobMatches,
         suggestedRoleId: bestMatch.id || analysis.suggestedRoleId || targetRole
       });
-      setStatusMessage(
-        miniQuizAnswer === 'yes'
-          ? `YES tercatat. Skor kesiapan akhir: ${quizScore}%, lanjut ke rekomendasi karier.`
-          : `NO tercatat. Skor kesiapan akhir: ${quizScore}%, sistem menampilkan prioritas e-course dulu.`
-      );
-      goToPage('dashboard');
+      clearStatusMessage();
+      goToPage('dashboard', { force: true });
     } catch (error) {
       setStatusMessage(error.message || 'Pengiriman kuis gagal. Silakan coba lagi.');
     } finally {
@@ -961,41 +941,38 @@ function App() {
     }
   };
 
-  const handleStartJourney = async () => {
-    try {
-      const response = await saveLead(email, targetRole);
-      setStatusMessage(response.data.message || 'Permintaan perjalanan belajar diterima.');
-    } catch (error) {
-      setStatusMessage(error.response?.data?.error || error.message || 'Masukkan alamat email yang valid.');
-    }
-  };
-
   return (
     <div className={`page-shell page-${currentPage}`}>
       <header className="site-header">
-        <button className="brand" type="button" onClick={() => goToPage('biodata')} aria-label="Beranda SkillMap">
+        <button className="brand" type="button" onClick={() => goToPage('home', { force: true })} aria-label="Beranda SkillMap">
           SkillMap
         </button>
 
-        <nav className="site-nav" aria-label="Navigasi utama">
-          {flowPages.map((page) => {
-            const blockedMessage = getPageBlockMessage(page.id);
-            return (
-              <button
-                className={currentPage === page.id ? 'active' : ''}
-                key={page.id}
-                type="button"
-                onClick={() => goToPage(page.id)}
-                disabled={Boolean(blockedMessage)}
-                title={blockedMessage || page.title}
-              >
-                {page.label}
-              </button>
-            );
-          })}
-        </nav>
+        {currentPage === 'home' ? (
+          <nav className="site-nav" aria-label="Navigasi landing page">
+            <button className="active" type="button" onClick={() => goToHomeSection('home')}>
+              Beranda
+            </button>
+            <button type="button" onClick={() => goToHomeSection('features')}>
+              Fitur
+            </button>
+            <button type="button" onClick={() => goToHomeSection('project-fit')}>
+              Manfaat
+            </button>
+            <button type="button" onClick={() => goToHomeSection('contact')}>
+              Kontak
+            </button>
+          </nav>
+        ) : (
+          <div className="header-step-summary" aria-live="polite">
+            <span>Langkah {activePage.number} / 05</span>
+            <strong>{activePage.label}</strong>
+          </div>
+        )}
 
-        <button className="nav-cta" type="button" onClick={() => goToPage('biodata')}>Mulai</button>
+        <button className="nav-cta" type="button" onClick={() => goToPage(currentPage === 'home' ? 'cv' : 'home', { force: true })}>
+          {currentPage === 'home' ? 'Mulai Scan' : 'Beranda'}
+        </button>
       </header>
 
       <main>
@@ -1005,72 +982,37 @@ function App() {
               <Icon name="spark" size={14} />
               Navigasi karier berbasis AI
             </span>
-            <h1>
-              Dari biodata dan CV ke rekomendasi karier yang jelas.
-            </h1>
-            <p>
-              Isi biodata seperti portal lowongan kerja, upload CV, lalu biarkan AI menghitung
-              persentase kecocokan pekerjaan. Mini quiz YES/NO membantu menentukan apakah kamu
-              lanjut ke rekomendasi karier atau mulai dari pilihan e-course dulu.
+            <h1>SkillMap</h1>
+            <p className="hero-lede">
+              Navigator pembelajaran berbasis AI untuk mahasiswa akhir dan fresh graduate
+              yang ingin tahu skill gap, persentase job match, dan learning path paling relevan
+              sebelum melamar kerja.
             </p>
 
-            <div className="role-selector">
-              <label htmlFor="target-role">Target role awal</label>
-              <select id="target-role" value={targetRole} onChange={handleTargetRoleChange}>
-                {roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </select>
-              <p>{activeRole.audience || 'Mahasiswa tingkat akhir dan fresh graduate'} - {activeRole.businessGoal}</p>
-            </div>
-
             <div className="hero-actions">
-              <input
-                className="sr-only"
-                id="cv-upload-hero"
-                type="file"
-                accept="application/pdf,.pdf"
-                onChange={handleUpload}
-              />
-              <label className="primary-button" htmlFor="cv-upload-hero" aria-disabled={isUploading}>
-                <Icon name="upload" size={16} />
-                {isUploading ? 'Menganalisis...' : 'Unggah CV PDF'}
-              </label>
-              <button className="secondary-button" type="button" onClick={() => handleAnalyzeProfile()}>
+              <button className="primary-button" type="button" onClick={() => goToPage('cv', { force: true })}>
                 <Icon name="play" size={17} />
-                Cek Kelengkapan
+                Upload CV Dulu
               </button>
             </div>
 
-            <p className="status-line">{statusMessage}</p>
-            <div className="mentor-note">
-              <span>Catatan flow</span>
-              <p>Urutannya dibuat sengaja: biodata dulu, CV kedua, hasil match ketiga, lalu mini quiz untuk keputusan akhir.</p>
-            </div>
-
-            <div className="human-step-strip" aria-label="Alur singkat penggunaan SkillMap">
-              {humanSteps.map((step) => (
-                <div className="human-step" key={step.number}>
-                  <span>{step.number}</span>
-                  <div>
-                    <strong>{step.title}</strong>
-                    <p>{step.text}</p>
-                  </div>
+            <div className="hero-proof-row" aria-label="Ringkasan produk SkillMap">
+              {heroStats.map((stat) => (
+                <div className="hero-stat" key={stat.label}>
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <DashboardVisual analysis={currentInsight} />
         </section>
 
         <section className="journey-section" id="features">
           <div className="section-heading">
             <h2>Alur Pengguna SkillMap</h2>
             <p>
-              Flow dibuat seperti career matcher: data pelamar masuk dulu, AI membaca CV,
+              Flow dibuat seperti career matcher: CV masuk dulu, profil singkat melengkapi konteks,
               pekerjaan diurutkan berdasarkan kecocokan, lalu mini quiz menentukan cabang akhir.
             </p>
           </div>
@@ -1094,6 +1036,7 @@ function App() {
               </article>
             ))}
           </div>
+
         </section>
 
         <section className="workspace-section" id="workspace">
@@ -1103,29 +1046,40 @@ function App() {
             <p>{activePage.description}</p>
           </div>
 
-          <p className="status-line workspace-status">{statusMessage}</p>
+          {statusMessage && (
+            <p className="status-line workspace-status">{statusMessage}</p>
+          )}
 
           <div className="workspace-grid">
             <article className="workspace-panel biodata-panel">
-              <div className="panel-label">01 / Biodata JobStreet</div>
-              <h3>Isi profil dasar pelamar</h3>
+              <div className="panel-label">02 / Profil Singkat</div>
+              <h3>Tambahkan konteks yang belum ada di CV</h3>
               <p className="panel-helper">
-                Biodata ini membantu AI membaca konteks CV: domisili, pendidikan, posisi yang diminati, dan pengalaman awal.
+                Bagian ini bukan data kontak. Tulis hal penting yang tidak masuk CV agar analisis lebih tepat.
               </p>
 
               <div className="biodata-progress">
-                <span>{biodataFilledCount} dari {Object.keys(initialBiodata).length} data terisi</span>
-                <div className="progress-track" aria-label={`Progres biodata ${biodataProgress}%`}>
+                <span>{biodataFilledCount} dari {requiredBiodataFields.length} konteks wajib terisi</span>
+                <div className="progress-track" aria-label={`Progres profil singkat ${biodataProgress}%`}>
                   <span style={{ width: `${biodataProgress}%` }} />
                 </div>
               </div>
+
+              {selectedCvFile && (
+                <div className="profile-use-note">
+                  <span>CV utama</span>
+                  <p>{selectedCvFile.name} sudah dipakai sebagai sumber utama. Isi form ini hanya untuk melengkapi konteks yang belum tertulis di CV.</p>
+                </div>
+              )}
 
               <div className="biodata-grid">
                 {biodataFields.map((field) => (
                   <div className={`field-group ${field.wide ? 'wide' : ''}`} key={field.id}>
                     <label className="field-label" htmlFor={`biodata-${field.id}`}>
                       {field.label}
-                      <span className="required-mark" aria-label="wajib">*</span>
+                      {field.required !== false && (
+                        <span className="required-mark" aria-label="wajib">*</span>
+                      )}
                     </label>
                     {field.multiline ? (
                       <textarea
@@ -1141,10 +1095,11 @@ function App() {
                       <input
                         className={showBiodataErrors && missingBiodataIds.has(field.id) ? 'field-invalid' : ''}
                         id={`biodata-${field.id}`}
+                        type={field.type || 'text'}
                         value={biodata[field.id]}
                         onChange={(event) => handleBiodataChange(field.id, event.target.value)}
                         placeholder={field.placeholder}
-                        required
+                        required={field.required !== false}
                         aria-invalid={showBiodataErrors && missingBiodataIds.has(field.id)}
                       />
                     )}
@@ -1155,24 +1110,20 @@ function App() {
                 ))}
               </div>
 
-              <button className="primary-button panel-action" type="button" onClick={handleSaveBiodata}>
-                {isBiodataSaved ? 'Lanjut ke Upload CV' : 'Simpan & Lanjut Upload CV'}
+              <button className="primary-button panel-action" type="button" onClick={handleSaveBiodata} disabled={isUploading}>
+                {isUploading ? 'Menganalisis CV...' : 'Scan CV & Lihat Job Match'}
               </button>
             </article>
 
             <article className="workspace-panel cv-panel">
-              <div className="panel-label">02 / Upload & Scan CV</div>
-              <h3>Upload CV PDF untuk dibaca AI</h3>
+              <div className="panel-label">01 / Upload CV</div>
+              <h3>Upload CV PDF dulu</h3>
               <p className="panel-helper">
-                AI mengubah isi PDF menjadi teks, lalu menggabungkannya dengan biodata untuk mendeteksi skill, job match, dan gap.
+                CV menjadi sumber utama analisis. Setelah file masuk, baru tambahkan profil singkat untuk hal yang tidak tertulis di CV.
               </p>
-              <div className="role-requirement-box">
-                <span>Kebutuhan role yang dipakai sistem</span>
-                <div className="chip-row">
-                  {activeRole.requiredSkills?.map((skill) => (
-                    <span className="chip soft" key={skill}>{skill}</span>
-                  ))}
-                </div>
+              <div className="profile-use-note">
+                <span>Urutan baru</span>
+                <p>Upload CV PDF, isi profil singkat tambahan, scan AI, lalu lihat job match.</p>
               </div>
               <input
                 className="sr-only"
@@ -1191,66 +1142,27 @@ function App() {
               {showCvErrors && !selectedCvFile && (
                 <p className="field-error cv-file-error">CV PDF wajib diupload sebelum lanjut.</p>
               )}
-              <label className="field-label" htmlFor="profile-summary">
-                Ringkasan profil
-                <span className="required-mark" aria-label="wajib">*</span>
-              </label>
-              <textarea
-                className={showCvErrors && !isCvSummaryFilled ? 'field-invalid' : ''}
-                id="profile-summary"
-                value={cvText}
-                onChange={(event) => {
-                  setCvText(event.target.value);
-                  setHasScannedCv(false);
-                  setRecommendation(null);
-                  setQuizResult(null);
-                  setMiniQuizAnswer(null);
-                }}
-                placeholder="Contoh: saya pernah membuat aplikasi React, ikut proyek API, mengerjakan dashboard, atau belajar database..."
-                required
-                aria-invalid={showCvErrors && !isCvSummaryFilled}
-              />
-              {showCvErrors && !isCvSummaryFilled && (
-                <p className="field-error">Ringkasan profil wajib diisi.</p>
-              )}
-              <div className="textarea-actions">
-                <button
-                  className="text-button"
-                  type="button"
-                  onClick={() => {
-                    setCvText(sampleCvText);
-                    setHasScannedCv(false);
-                    setRecommendation(null);
-                    setQuizResult(null);
-                    setMiniQuizAnswer(null);
-                  }}
-                >
-                  Gunakan contoh
+              <div className="page-actions step-actions">
+                <button className="secondary-button" type="button" onClick={() => goToPage('home', { force: true })}>
+                  Kembali ke Beranda
                 </button>
                 <button
-                  className="text-button"
+                  className="primary-button"
                   type="button"
                   onClick={() => {
-                    setCvText('');
-                    setHasScannedCv(false);
-                    setRecommendation(null);
-                    setQuizResult(null);
-                    setMiniQuizAnswer(null);
+                    if (!selectedCvFile) {
+                      setShowCvErrors(true);
+                      clearStatusMessage();
+                      return;
+                    }
+                    goToPage('biodata');
                   }}
                 >
-                  Kosongkan
+                  Lanjut Isi Profil Singkat
                 </button>
               </div>
-              <button
-                className="primary-button panel-action"
-                type="button"
-                onClick={() => handleAnalyzeProfile(selectedCvFile)}
-                disabled={isUploading}
-              >
-                Scan CV & Lihat Job Match
-              </button>
 
-              {extractedCvText && (
+              {hasScannedCv && extractedCvText && (
                 <div className="result-block pdf-output-block">
                   <span>Teks PDF yang dibaca AI</span>
                   <textarea
@@ -1262,23 +1174,27 @@ function App() {
                 </div>
               )}
 
-              <div className="result-block">
-                <span>Skill terdeteksi</span>
-                <div className="chip-row">
-                  {analysis.extractedSkills?.map((skill) => (
-                    <span className="chip" key={skill}>{skill}</span>
-                  ))}
+              {hasScannedCv && (
+                <div className="result-block">
+                  <span>Skill terdeteksi</span>
+                  <div className="chip-row">
+                    {analysis.extractedSkills?.map((skill) => (
+                      <span className="chip" key={skill}>{skill}</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="result-block">
-                <span>Gap prioritas</span>
-                <div className="chip-row">
-                  {analysis.skillGap?.map((gap) => (
-                    <span className="chip ghost" key={gap}>{gap}</span>
-                  ))}
+              {hasScannedCv && (
+                <div className="result-block">
+                  <span>Gap prioritas</span>
+                  <div className="chip-row">
+                    {analysis.skillGap?.map((gap) => (
+                      <span className="chip ghost" key={gap}>{gap}</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </article>
 
             <article className="workspace-panel match-panel">
@@ -1286,7 +1202,7 @@ function App() {
               <h3>Persentase kecocokan dari AI</h3>
               <p className="panel-helper">
                 {hasScannedCv
-                  ? 'Hasil ini berasal dari biodata dan CV terbaru yang kamu kirim.'
+                  ? 'Hasil ini berasal dari CV dan profil singkat tambahan terbaru yang kamu kirim.'
                   : 'Ini masih preview data contoh. Jalankan scan CV untuk hasil personal.'}
               </p>
 
@@ -1313,9 +1229,14 @@ function App() {
                 ))}
               </div>
 
-              <button className="primary-button panel-action" type="button" onClick={() => goToPage('quiz')}>
-                Lanjut Mini Quiz
-              </button>
+              <div className="page-actions step-actions">
+                <button className="secondary-button" type="button" onClick={() => goToPage('biodata', { force: true })}>
+                  Kembali ke Profil Singkat
+                </button>
+                <button className="primary-button" type="button" onClick={() => goToPage('quiz')}>
+                  Lanjut Mini Quiz
+                </button>
+              </div>
             </article>
 
             <article className="workspace-panel quiz-panel">
@@ -1382,14 +1303,19 @@ function App() {
                 </div>
               )}
 
-              <button
-                className="primary-button panel-action"
-                type="button"
-                onClick={handleQuizSubmit}
-                disabled={isSubmittingQuiz || !miniQuizAnswer}
-              >
-                {isSubmittingQuiz ? 'Menghitung...' : 'Lihat Rekomendasi Akhir'}
-              </button>
+              <div className="page-actions step-actions">
+                <button className="secondary-button" type="button" onClick={() => goToPage('matches', { force: true })}>
+                  Kembali ke Job Match
+                </button>
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={handleQuizSubmit}
+                  disabled={isSubmittingQuiz || !miniQuizAnswer}
+                >
+                  {isSubmittingQuiz ? 'Menghitung...' : 'Lihat Dashboard'}
+                </button>
+              </div>
 
               {quizResult && (
                 <div className="score-card">
@@ -1404,208 +1330,207 @@ function App() {
         </section>
 
         <section className="dashboard-section" id="dashboard">
-          <div className="section-heading compact">
-            <span className="page-counter">Langkah 05 dari 05</span>
-            <h2>Dashboard Personal</h2>
-            <p>Hasilnya dibuat ringkas: skor kesiapan, fokus utama, dan roadmap yang bisa mulai dikerjakan.</p>
-          </div>
+          {statusMessage && (
+            <p className="status-line workspace-status">{statusMessage}</p>
+          )}
 
-          <p className="status-line workspace-status">{statusMessage}</p>
-
-          <article className="workspace-panel roadmap-panel-card">
-            <div className="panel-label">05 / Dasbor Personal</div>
-            <h3>Ringkasan akhir rekomendasi</h3>
-
-            <div className="dashboard-result-grid">
-              <div className="readiness-card">
-                <strong>{currentInsight.readinessScore ?? analysis.readinessScore}%</strong>
-                <span>{currentInsight.readinessLabel || 'fokus bertahap'}</span>
-              </div>
-
-              <div className="role-summary">
-                <span>Tujuan utama</span>
-                <p>{careerRecommendation.summary || activeRole.businessGoal || analysis.businessGoal}</p>
-              </div>
-            </div>
-
-            <div className="market-signal-card">
-              <span>Sinyal kebutuhan industri</span>
-              <div>
-                {(currentInsight.marketSignals || activeRole.marketSignals || []).map((signal) => (
-                  <strong key={signal}>{signal}</strong>
-                ))}
-              </div>
-            </div>
-
-            {miniQuizAnswer && (
-              <div className={`branch-result dashboard-branch ${miniQuizAnswer === 'yes' ? 'career' : 'course'}`}>
-                <span>{miniQuizAnswer === 'yes' ? 'Keputusan mini quiz: YES' : 'Keputusan mini quiz: NO'}</span>
-                <strong>{miniQuizAnswer === 'yes' ? careerRecommendation.title : 'Mulai dari e-course dulu'}</strong>
-                <p>
-                  {miniQuizAnswer === 'yes'
-                    ? 'Sistem mengarahkan user ke rekomendasi karier karena sinyal kesiapan personal positif.'
-                    : `Sistem menyarankan belajar ${courseRecommendations[0]?.skill || topGaps[0]} sebelum lanjut melamar.`}
-                </p>
-                {miniQuizAnswer === 'no' && courseRecommendations[0]?.url && (
-                  <a
-                    className="course-direct-link compact"
-                    href={courseRecommendations[0].url}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(event) => openCourse(event, courseRecommendations[0].url)}
-                  >
-                    Buka course utama
-                  </a>
-                )}
-              </div>
-            )}
-
-            <div className="human-result-grid">
-              <div className="human-result-card">
-                <span>Yang sudah bisa kamu andalkan</span>
-                <div className="chip-row">
-                  {topStrengths.map((skill) => (
-                    <span className="chip" key={skill}>{skill}</span>
-                  ))}
+          <article className="workspace-panel roadmap-panel-card dashboard-shell">
+            <div className="dashboard-hero-band">
+              <div className="dashboard-headline">
+                <div className="panel-label">05 / Dasbor Personal</div>
+                <h3>Arah kariermu saat ini</h3>
+                <strong className="dashboard-role-title">{dashboardDecisionTitle}</strong>
+                <p className="dashboard-summary-copy">{dashboardDecisionCopy}</p>
+                <div className="dashboard-tag-row">
+                  <span>{expectedPositionText || 'Target role belum diisi'}</span>
+                  <span>{dashboardTrackLabel}</span>
                 </div>
               </div>
 
-              <div className="human-result-card warm">
-                <span>Yang sebaiknya jadi fokus dulu</span>
-                <div className="chip-row">
-                  {topGaps.map((gap) => (
-                    <span className="chip ghost" key={gap}>{gap}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
+              <div className="dashboard-score-pane">
+                <span>Skor kesiapan</span>
+                <strong>{finalReadinessScore}%</strong>
+                <p>{currentInsight.readinessLabel || quizResult?.track || 'readiness'}</p>
 
-            <div className="next-action-card">
-              <span>Langkah pertama yang disarankan</span>
-              <p>
-                {miniQuizAnswer === 'no'
-                  ? (
-                    <>
-                      Mulai dari e-course <CourseInlineLink course={courseRecommendations[0]} />, lalu ulangi mini quiz setelah latihan.
-                    </>
-                  )
-                  : `Mulai dari ${topGaps[0] || 'roadmap paling atas'}, buat latihan kecil, lalu simpan hasilnya sebagai bukti portofolio.`}
-              </p>
-            </div>
-
-            <div className="roadmap-list">
-              {activeRoadmap.map((step, index) => (
-                <div className="roadmap-step" key={step.id || step.action}>
-                  <span>{String(index + 1).padStart(2, '0')}</span>
+                <div className="dashboard-metric-inline">
                   <div>
-                    <strong>{step.title || `Langkah ${index + 1}`}</strong>
-                    {step.duration && <small>{step.duration}</small>}
-                    <p>{step.action || step}</p>
+                    <span>Top match</span>
+                    <strong>{bestMatch.matchScore}%</strong>
+                    <small>{bestMatch.name}</small>
+                  </div>
+                  <div>
+                    <span>Gap utama</span>
+                    <strong>{topGaps[0] || '-'}</strong>
+                    <small>{topGaps.length} fokus</small>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            <div className="tech-coverage">
-              {(dashboard?.compliance?.frontend || ['React', 'Vite', 'Panggilan API dengan Axios']).map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </div>
-
-            {dashboard?.activity && (
-              <div className="activity-summary">
-                <span>Aktivitas demo tersimpan</span>
-                <div>
-                  <p>{dashboard.activity.cvAnalyses?.length || 0} analisis CV</p>
-                  <p>{dashboard.activity.quizAttempts?.length || 0} hasil kuis</p>
-                  <p>{dashboard.activity.leads?.length || 0} lead email</p>
-                </div>
               </div>
-            )}
+            </div>
 
-            <div className="page-actions">
+            <div className="dashboard-content-grid">
+              <section className="dashboard-section-block">
+                <div className="dashboard-block-heading">
+                  <span>Profil saat ini</span>
+                  <strong>{expectedPositionText || bestMatch.name}</strong>
+                </div>
+                <p className="dashboard-block-copy">
+                  {profileSummaryText || 'Isi profil singkat dengan konteks yang relevan.'}
+                </p>
+
+                {dashboardProfileRows.length > 0 && (
+                  <div className="profile-row-list">
+                    {dashboardProfileRows.map((row) => (
+                      <div className="profile-row" key={row.label}>
+                        <span>{row.label}</span>
+                        <strong>{row.value}</strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="dashboard-section-block dashboard-roadmap-card">
+                <div className="dashboard-block-heading">
+                  <span>Roadmap prioritas</span>
+                  <strong>{activeRoadmap.length} langkah berikutnya</strong>
+                </div>
+                <div className="roadmap-list dashboard-roadmap-list">
+                  {activeRoadmap.map((step, index) => (
+                    <div className="roadmap-step" key={step.id || step.action}>
+                      <span>{String(index + 1).padStart(2, '0')}</span>
+                      <div>
+                        <strong>{step.title || `Langkah ${index + 1}`}</strong>
+                        {step.duration && <small>{step.duration}</small>}
+                        <p>{step.action || step}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            <div className="dashboard-insight-grid">
+              <section className="dashboard-section-block">
+                <div className="dashboard-skill-columns">
+                  <div className="dashboard-skill-panel">
+                    <span>Yang sudah kuat</span>
+                    <div className="chip-row">
+                      {topStrengths.map((skill) => (
+                        <span className="chip" key={skill}>{skill}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="dashboard-skill-panel warm">
+                    <span>Yang perlu dikejar</span>
+                    <div className="chip-row">
+                      {topGaps.map((gap) => (
+                        <span className="chip ghost" key={gap}>{gap}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="dashboard-section-block">
+                <div className="dashboard-block-heading">
+                  <span>Keputusan sistem</span>
+                  <strong>
+                    {miniQuizAnswer === 'yes'
+                      ? 'Lanjut ke jalur karier'
+                      : miniQuizAnswer === 'no'
+                        ? 'Belajar dulu sebelum apply'
+                        : 'Belum ada keputusan akhir'}
+                  </strong>
+                </div>
+                <p className="dashboard-block-copy">{dashboardDecisionSupportCopy}</p>
+
+                <div className="dashboard-next-step-callout">
+                  <span>Langkah pertama</span>
+                  <p>
+                    {miniQuizAnswer === 'no'
+                      ? (
+                        <>
+                          Mulai dari e-course <CourseInlineLink course={dashboardPrimaryCourse} />, lalu ulangi evaluasi setelah latihan.
+                        </>
+                      )
+                      : `Ambil ${topGaps[0] || 'roadmap paling atas'} sebagai fokus awal, buat latihan kecil, lalu simpan hasilnya sebagai bukti portofolio.`}
+                  </p>
+                </div>
+              </section>
+            </div>
+
+            <div className="dashboard-bottom-grid">
+              <section className="dashboard-section-block">
+                <div className="dashboard-block-heading">
+                  <span>Sinyal kebutuhan industri</span>
+                  <strong>Fokus yang paling dicari</strong>
+                </div>
+                <div className="dashboard-signal-list">
+                  {dashboardSignals.map((signal) => (
+                    <strong key={signal}>{signal}</strong>
+                  ))}
+                </div>
+              </section>
+
+              {dashboardActivityMetrics.length > 0 && (
+                <section className="dashboard-section-block dashboard-activity-block">
+                  <div className="dashboard-block-heading">
+                    <span>Aktivitas tersimpan</span>
+                    <strong>Aktivitas penggunaan</strong>
+                  </div>
+                  <div className="dashboard-activity-grid">
+                    {dashboardActivityMetrics.map((item) => (
+                      <div className="dashboard-activity-item" key={item.label}>
+                        <strong>{item.value}</strong>
+                        <span>{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+
+            <div className="page-actions dashboard-actions">
               <button className="secondary-button" type="button" onClick={() => goToPage('quiz')}>
                 Kembali ke Mini Quiz
               </button>
-              <button className="primary-button" type="button" onClick={() => goToPage('biodata')}>
-                Ulangi dari Biodata
+              <button className="primary-button" type="button" onClick={() => goToPage('cv', { force: true })}>
+                Ulangi dari Upload CV
               </button>
             </div>
           </article>
         </section>
 
-        <section className="insight-section">
+        <section className="insight-section" id="project-fit">
           <div className="insight-copy">
-            <span className="section-kicker">Kesesuaian proyek</span>
-            <h2>Tetap siap untuk kebutuhan capstone</h2>
+            <span className="section-kicker">Untuk semua pencari kerja</span>
+            <h2>Siap bantu rencana kariermu</h2>
             <p>
-              Di balik tampilan yang lebih ramah, MVP ini tetap punya endpoint RESTful Flask
-              untuk unggah CV, kuis, rekomendasi, dasbor, dan penyimpanan email. Jalur AI/ML
-              dan Data Science juga tetap punya ruang integrasi.
+              SkillMap membantu kamu membaca kekuatan dari CV, melihat gap skill yang perlu
+              ditutup, dan memilih langkah belajar yang paling relevan sebelum melamar kerja.
             </p>
-            {researchQuestions.length > 0 && (
-              <div className="research-box">
-                <span>Research question</span>
-                {researchQuestions.map((question) => (
-                  <p key={question}>{question}</p>
-                ))}
-              </div>
-            )}
           </div>
 
-          <div className="capstone-panel">
-            <div className="capstone-module-list">
-              <span>Fitur MVP</span>
-              {(capstoneModules.length ? capstoneModules : [
+          <div className="feature-panel">
+            <div className="feature-module-list">
+              <span>Fitur utama</span>
+              {[
                 'Ekstraksi skill dari CV',
                 'Kuis adaptif',
                 'Pemetaan skill gap',
                 'Jalur belajar personal',
                 'Insight dasbor'
-              ]).map((item) => (
+              ].map((item) => (
                 <div className="requirement-item" key={item}>
                   <Icon name="check" size={14} />
                   <span>{item}</span>
                 </div>
               ))}
             </div>
-
-            <div className="coverage-grid">
-              {Object.entries(dashboard?.compliance || projectRequirements?.technicalCoverage || {}).map(([area, items]) => (
-                <div className="coverage-card" key={area}>
-                  <span>{area}</span>
-                  {items.map((item) => (
-                    <p key={item}>{item}</p>
-                  ))}
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
-        <section className="cta-section" id="start">
-          <div className="cta-panel">
-            <h2>Simpan roadmap belajarmu</h2>
-            <p>
-              Tinggalkan email agar perjalanan belajarmu bisa dilanjutkan saat fitur akun sudah tersedia.
-            </p>
-            <div className="email-form">
-              <div className="email-field">
-                <label htmlFor="lead-email">Email untuk menyimpan progres</label>
-                <input
-                  id="lead-email"
-                  type="email"
-                  placeholder="nama@email.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                />
-              </div>
-              <button type="button" onClick={handleStartJourney}>
-                Mulai Perjalanan
-              </button>
-            </div>
-          </div>
-        </section>
       </main>
 
       <footer className="site-footer" id="contact">
@@ -1613,12 +1538,6 @@ function App() {
           <strong>SkillMap</strong>
           <p>2026 SkillMap AI. Navigator pembelajaran keterampilan yang dipersonalisasi.</p>
         </div>
-        <nav aria-label="Navigasi footer">
-          <button type="button" onClick={() => goToPage('cv')}>Unggah CV</button>
-          <button type="button" onClick={() => goToPage('quiz')}>Mini Quiz</button>
-          <button type="button" onClick={() => goToPage('dashboard')}>Dasbor</button>
-          <button type="button" onClick={() => goToPage('matches')}>Job Match</button>
-        </nav>
       </footer>
     </div>
   );

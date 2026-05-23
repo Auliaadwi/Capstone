@@ -13,7 +13,6 @@ export const fetchQuizQuestions = (domain = 'technology', targetRole = 'fullstac
 export const submitQuiz = (answers, domain = 'technology', targetRole = 'fullstack-web-developer') =>
   api.post('/api/quiz/submit', { answers, domain, targetRole });
 export const createRecommendation = (payload) => api.post('/api/recommendations', payload);
-export const saveLead = (email, targetRole) => api.post('/api/leads', { email, targetRole });
 
 export const uploadCv = async (file, domain = 'technology', targetRole = 'fullstack-web-developer', text = '') => {
   const formData = new FormData();
