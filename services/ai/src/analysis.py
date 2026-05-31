@@ -1,36 +1,20 @@
 from __future__ import annotations
 
 import json
-from copy import deepcopy
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
-
-DEFAULT_DASHBOARD_SNAPSHOT = {
-    "user": {"name": "Alya Rahman", "role": "Fullstack Explorer"},
-    "skillScore": 78,
-    "targetRole": "Junior Fullstack Developer",
-    "strengths": ["JavaScript", "React", "UI Building"],
-    "gaps": ["Flask API Design", "System Design", "SQL Joins"],
-    "roadmap": [
-        "Build a CRUD API with Flask and PostgreSQL",
-        "Practice relational schema design and joins",
-        "Ship one end-to-end project with public deployment",
-    ],
-}
-
 
 def load_json(filename: str, fallback):
     try:
         with (DATA_DIR / filename).open("r", encoding="utf-8") as handle:
             return json.load(handle)
     except (FileNotFoundError, json.JSONDecodeError):
-        return deepcopy(fallback)
+        return fallback.copy() if hasattr(fallback, "copy") else fallback
 
 
 TAXONOMIES = load_json("taxonomies.json", {})
 QUIZ_BANK = load_json("quizBank.json", {})
-DASHBOARD_SNAPSHOT = load_json("dashboardSnapshot.json", DEFAULT_DASHBOARD_SNAPSHOT)
 
 
 def normalize_text(value: str = "") -> str:
@@ -69,7 +53,7 @@ def analyze_cv_text(input_text: str = "", domain: str = "technology") -> dict:
         if any(keyword in text for keyword in keywords):
             detected_skills.append(skill)
 
-    extracted_skills = detected_skills or ["Communication", "Problem Solving"]
+    extracted_skills = detected_skills
 
     # Calculate match score for each role
     job_matches = []
@@ -86,8 +70,14 @@ def analyze_cv_text(input_text: str = "", domain: str = "technology") -> dict:
     job_matches.sort(key=lambda r: r["matchScore"], reverse=True)
     best = job_matches[0]
 
-    default_gaps = ["portfolio", "system design", "deployment"]
-    skill_gap = [gap for gap in default_gaps if gap not in text]
+    skill_gap = [
+        skill
+        for skill in next(
+            (role["required_skills"] for role in ROLE_PROFILES if role["id"] == best["id"]),
+            [],
+        )
+        if skill not in text
+    ][:5]
 
     return {
         "extractedSkills": extracted_skills,
@@ -135,4 +125,11 @@ def score_quiz(answers: list) -> dict:
 
 
 def get_dashboard_snapshot() -> dict:
-    return deepcopy(DASHBOARD_SNAPSHOT)
+    return {
+        "user": None,
+        "skillScore": None,
+        "targetRole": None,
+        "strengths": [],
+        "gaps": [],
+        "roadmap": [],
+    }

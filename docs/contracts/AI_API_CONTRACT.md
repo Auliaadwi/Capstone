@@ -10,7 +10,7 @@ Dokumen ini adalah standar komunikasi (API Contract) antara sistem Web (Full-Sta
 - **URL:** `POST /api/ai/analyze-cv`
 - **Content-Type:** `application/json`
 
-**Catatan implementasi web:** upload CV dari frontend wajib berupa PDF (`.pdf`) lewat `POST /api/cv/upload` dengan `multipart/form-data`. Backend menolak file non-PDF, mengekstrak isi PDF menjadi teks, lalu teks inilah yang dikirim/dibaca oleh AI.
+**Catatan implementasi web:** upload CV dari frontend wajib berupa PDF (`.pdf`) lewat `POST /api/cvs` dengan `multipart/form-data`. Backend menolak file non-PDF, mengekstrak isi PDF menjadi teks, lalu teks inilah yang dikirim/dibaca oleh AI. Endpoint lama `POST /api/cv/upload` masih tersedia sebagai alias kompatibilitas.
 
 ### 📥 Request Body (Dari Web ke AI)
 Web akan mengirimkan teks CV mentah (hasil OCR atau parse PDF di backend utama) ke AI.
@@ -57,7 +57,7 @@ AI wajib mengembalikan daftar skill yang terdeteksi, serta rekomendasi role/peke
 *(Catatan buat AI: Array `roadmap` dan `skillGap` difilter berdasarkan role yang skor kecocokannya paling tinggi).*
 
 ### Response Tambahan dari Backend Web
-Endpoint `POST /api/cv/upload` juga mengembalikan teks hasil ekstraksi PDF agar frontend bisa menampilkan output yang dibaca AI.
+Endpoint `POST /api/cvs` juga mengembalikan teks hasil ekstraksi PDF agar frontend bisa menampilkan output yang dibaca AI.
 ```json
 {
   "fileName": "cv.pdf",

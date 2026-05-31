@@ -200,8 +200,6 @@ yang menghubungkan frontend dengan backend.
 4. Cloud & Deployment 
 ● Cloud server pribadi : Digunakan untuk deployment aplikasi, penyimpanan 
 data, dan hosting backend. 
-● Docker: Untuk containerization agar sistem mudah dijalankan dan di-deploy 
-secara konsisten. 
 5. Dataset 
 ● Dataset CV/resume publik dan dataset lowongan pekerjaan (job description) 
 digunakan untuk melatih model dalam mendeteksi skill gap. 

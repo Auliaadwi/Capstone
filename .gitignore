@@ -3,15 +3,13 @@ dist
 build
 .env
 .env.*
+!.env.example
+!**/.env.example
 .DS_Store
-uploads
 __pycache__
 *.pyc
 .venv/
 .pytest_cache/
-.postgres-data/
-.postgres.log
-server.env
 .playwright-cli/
 output/
 *-dev.out.log

@@ -10,26 +10,16 @@ flowchart TD
   B --> C[Frontend memuat data awal]
 
   C --> C1[GET /api/roles]
-  C --> C2[GET /api/dashboard/overview]
-  C --> C3[GET /api/project/requirements]
-
   C1 --> D[Pilih target role]
-  C2 --> D
-  C3 --> D
 
-  D --> E[Isi biodata ala JobStreet]
+  D --> E[Upload CV PDF]
   E --> E0{Semua biodata terisi?}
-  E0 -->|Tidak| E
-  E0 -->|Ya| E1[Nama, domisili, pendidikan, posisi diminati, pengalaman]
-  E1 --> F{Upload CV PDF?}
-
-  F -->|Ya| G[Unggah file CV PDF]
-  F -->|Tidak| F
-  G --> H[Isi ringkasan profil wajib]
+  E0 -->|Tidak| H[Isi profil singkat tambahan]
+  E0 -->|Ya| I1[POST /api/cvs]
 
   H --> I
   I{CV PDF dan ringkasan lengkap?} -->|Tidak| H
-  I -->|Ya| I1[POST /api/cv/upload]
+  I -->|Ya| I1[POST /api/cvs]
 
   I1 --> J[API validasi format PDF]
   J --> J1[Ekstrak PDF menjadi teks]
@@ -42,16 +32,13 @@ flowchart TD
   O --> P[Tampilkan skill terdeteksi dan gap prioritas]
 
   P --> P1[Tampilkan rekomendasi pekerjaan berdasarkan persentase kecocokan]
-  P1 --> Q[Mini quiz YES/NO]
-  Q --> Q1{Contoh: pandai mengatur waktu?}
-  Q1 -->|YES| R[Tampilkan rekomendasi karier]
-  Q1 -->|NO| S[Tampilkan pilihan belajar dari e-course platform]
-  R --> U[POST /api/recommendations]
-  S --> U
-  U --> V[Gabungkan hasil CV, job match, dan jawaban mini quiz]
-  V --> W[Perbarui rekomendasi akhir]
+  P1 --> Q[POST /api/career-fit-quizzes]
+  Q --> Q1[Mini quiz kecenderungan karier]
+  Q1 --> U[POST /api/recommendations]
+  U --> V[POST /api/career-results]
+  V --> W[Gabungkan hasil CV, job match, dan jawaban mini quiz]
 
-  W --> X[Dashboard menampilkan skor, kekuatan, gap, sinyal industri, roadmap, dan aktivitas]
+  W --> X[Dashboard menampilkan role final, kekuatan, gap, sinyal industri, dan roadmap]
   X --> Y{Simpan perjalanan belajar?}
 
   Y -->|Ya| Z[Masukkan email]
@@ -73,17 +60,19 @@ flowchart LR
   UI --> APIClient[Axios API client]
 
   APIClient --> Roles[GET /api/roles]
-  APIClient --> CV[POST /api/cv/upload]
-  APIClient --> Questions[GET /api/quiz/questions]
-  APIClient --> Quiz[POST /api/quiz/submit]
+  APIClient --> CV[POST /api/cvs]
+  APIClient --> Questions[GET /api/quiz-questions]
+  APIClient --> CareerFit[POST /api/career-fit-quizzes]
+  APIClient --> Quiz[POST /api/career-results]
   APIClient --> Rec[POST /api/recommendations]
-  APIClient --> Dash[GET /api/dashboard/overview]
+  APIClient --> Dash[GET /api/dashboard-snapshots/overview]
   APIClient --> Leads[POST /api/leads]
 
   subgraph FlaskAPI[Flask REST API]
     Roles
     CV
     Questions
+    CareerFit
     Quiz
     Rec
     Dash
@@ -98,7 +87,7 @@ flowchart LR
     QuizBank[quiz bank]
     Score[scoreQuiz]
     Recommend[createPersonalizedRecommendation]
-    Snapshot[getDashboardSnapshot]
+    CareerFitBuilder[generateCareerFitQuiz]
   end
 
   CV --> Extract --> Analyze
@@ -109,13 +98,13 @@ flowchart LR
   Questions --> QuizBank
   Questions --> RoleProfile
 
+  CareerFit --> CareerFitBuilder
   Quiz --> Score
   Score --> SaveQuiz[saveQuizResult]
 
   Rec --> Recommend
   Recommend --> RoleProfile
 
-  Dash --> Snapshot
   Dash --> Activity[getLatestActivity]
 
   Leads --> ValidateEmail{Email valid?}
@@ -143,20 +132,19 @@ flowchart LR
 
 | Tahap | Input | Proses | Output |
 | --- | --- | --- | --- |
-| Load awal | Halaman web dibuka | Ambil role, snapshot dashboard, dan requirement proyek | Data role, modul capstone, data dashboard |
-| Biodata | Nama, domisili, pendidikan, posisi diminati, pengalaman | Validasi semua field wajib sebelum lanjut | Profil pelamar terstruktur |
+| Load awal | Halaman web dibuka | Ambil daftar role dari API | Data role |
+| Profil singkat | Posisi yang dituju, skill/pengalaman tambahan, profil singkat | Validasi semua field wajib sebelum lanjut | Konteks pelengkap CV |
 | Analisis CV | File CV PDF, ringkasan profil, biodata, domain, target role | Validasi input wajib, validasi PDF, ekstraksi teks PDF, deteksi skill, mapping ke required skills | Teks PDF yang dibaca AI, extracted skills, skill gap, readiness score, job match percentage |
-| Mini quiz | Jawaban YES/NO pengguna | Cabang keputusan berdasarkan sinyal kesiapan personal | YES: rekomendasi karier, NO: pilihan e-course |
+| Mini quiz | Pilihan pengguna dari beberapa opsi role | Validasi kecenderungan karier dari job match | Role yang paling kuat dari CV dan minat pengguna |
 | Rekomendasi | Skill hasil CV, job match, jawaban mini quiz | Gabungkan sinyal CV dan kuis untuk rekomendasi akhir | Readiness score final, skill gap, roadmap belajar, career/course recommendation |
-| Dashboard | Snapshot, hasil analisis, hasil kuis, activity | Render insight personal dan aktivitas demo | Skor, kekuatan, gap, roadmap, activity |
+| Dashboard | Hasil analisis, hasil kuis, rekomendasi akhir | Render insight personal | Role final, kekuatan, gap, roadmap |
 | Lead capture | Email dan target role | Validasi email lalu simpan | Lead tersimpan atau pesan error |
 
 ## Catatan Sumber Implementasi
 
 - Frontend: `apps/web/src/App.jsx`
 - API client: `apps/web/src/api.js`
-- Flask API: `apps/api/src/app.py`
-- Logic analisis: `apps/api/src/services/analysis.js`
-- Repository penyimpanan: `apps/api/src/repositories/store.js`
-- Data snapshot: `apps/api/src/data/dashboardSnapshot.json`
-- Skema database: `database/schema.sql`
+- Flask API: `../BE-Capstone/src/app.py`
+- Logic analisis: `../BE-Capstone/src/services/analysis.py`
+- Repository penyimpanan: `../BE-Capstone/src/repositories/store.py`
+- Skema database: `../BE-Capstone/database/schema.sql`

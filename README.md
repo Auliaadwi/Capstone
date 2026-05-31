@@ -1,121 +1,103 @@
-# SkillMap
+# SkillMap Frontend
 
-SkillMap is a capstone MVP for "Navigator Pembelajaran Keterampilan yang Dipersonalisasi". It helps final-year students and fresh graduates compare their CV/profile against target role requirements, validate readiness through an adaptive quiz, and receive a personalized learning roadmap.
+SkillMap frontend is the React + Vite web app for the capstone MVP "Navigator Pembelajaran Keterampilan yang Dipersonalisasi".
 
-## Project Fit
+This repository is now treated as the frontend workspace. The authoritative backend lives in `../BE-Capstone`, and the AI/model service is owned separately by the AI team.
 
-Core features are aligned with the CC26-PSU401 project plan:
+## Scope
 
-- CV upload and NLP-style skill extraction
-- Adaptive quiz for practical readiness signals
-- Skill gap mapping against target roles
-- Personalized learning path recommendation
-- Dashboard insight for skills, gaps, roadmap, and recent activity
+- User-facing SkillMap web interface
+- Supabase email/password auth from the browser
+- CV upload flow, profile form, job match view, mini quiz, final result, and dashboard UI
+- API calls through `VITE_API_URL`
 
-Project limitations and MVP boundaries are documented in [BATASAN.md](BATASAN.md).
-
-## Stack
-
-- Frontend: React + Vite, Axios networking calls, responsive UI
-- Main API: Express REST API
-- Persistence: PostgreSQL with in-memory fallback when `DATABASE_URL` is not configured
-- AI/ML integration: contract-ready endpoints for CV analysis, recommendation, and future Flask/FastAPI model serving
-- Data Science integration: dashboard and requirement contracts ready for EDA/Streamlit outputs
-
-The previous Flask API files are still present as a useful starting point for a separate AI/model service. The main full-stack REST API now runs on Express to satisfy the web-backend requirement.
+Do not add new backend changes in this repository. Use `../BE-Capstone` for Flask API work.
 
 ## Structure
 
-- `apps/api` - Express API for CV upload, quiz, recommendations, roles, dashboard data, and lead capture
-- `apps/web` - Vite React frontend with Axios API calls and responsive SkillMap UI
-- `services/ai` - reserved folder for future model service integration
-- `database/schema.sql` - PostgreSQL schema for users, CVs, skills, learning paths, quiz attempts, and leads
+- `apps/web` - React + Vite frontend application
+- `apps/web/src` - UI, client state, Supabase client, and Axios API client
+- `apps/web/.env.example` - frontend environment template
+- `docs` - frontend-facing project notes and API references
+
+AI/model files are intentionally left untouched because they are owned outside the frontend scope.
 
 ## Run Locally
 
 Install dependencies:
 
 ```bash
-npm --prefix apps/api install
 npm --prefix apps/web install
 ```
 
-Start the API:
+Create frontend env:
 
-```bash
-npm --prefix apps/api run dev
+```powershell
+Copy-Item apps/web/.env.example apps/web/.env
 ```
 
-Start the web app:
+Set the backend URL and Supabase browser keys:
+
+```env
+VITE_API_URL=http://localhost:3001
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+Start the frontend:
 
 ```bash
 npm --prefix apps/web run dev
 ```
 
-Default URLs:
+Default frontend URL:
 
-- Web: `http://localhost:5173`
-- API: `http://localhost:3001`
-- Health: `http://localhost:3001/health`
+```txt
+http://localhost:5173
+```
+
+Run the backend from `../BE-Capstone`:
+
+```bash
+cd ../BE-Capstone
+flask --app src.app run --port 3001 --reload
+```
 
 On Windows PowerShell, use `npm.cmd` if the execution policy blocks `npm.ps1`.
 
-## Local PostgreSQL
+## API Contract
 
-This repository includes helper scripts for a project-local PostgreSQL cluster.
-
-- Start DB: `npm run dev:db:start`
-- Stop DB: `npm run dev:db:stop`
-- Check status: `npm run dev:db:status`
-
-Optional API environment variables:
-
-- `DATABASE_URL` for PostgreSQL persistence
-- `PORT` to override API port
-- `CORS_ORIGIN` to allow frontend origins
-- `AUTO_CREATE_TABLES` to let Express create base tables automatically
-- `DATABASE_SSL=true` when a hosted PostgreSQL provider requires SSL
-
-If `DATABASE_URL` is empty, the API still works with an in-memory store so the MVP demo does not crash.
-
-## REST API
+The frontend expects the backend base URL from `VITE_API_URL` and calls these main endpoints:
 
 - `GET /health`
+- `GET /api/profile`
+- `GET /api/profile/cv-analyses`
 - `GET /api/roles`
-- `POST /api/cv/upload`
-- `GET /api/quiz/questions?domain=technology&targetRole=fullstack-web-developer`
-- `POST /api/quiz/submit`
+- `POST /api/cvs`
+- `POST /api/career-fit-quizzes`
+- `POST /api/career-results`
 - `POST /api/recommendations`
-- `GET /api/dashboard/overview`
-- `GET /api/dashboard/:userId`
-- `POST /api/leads`
-- `GET /api/project/requirements`
+
+Backend secrets, database configuration, CORS, and AI service configuration belong in `../BE-Capstone/server.env`.
 
 ## Deployment
 
-Frontend deployment can use Netlify, Vercel, or GitHub Pages. Set `VITE_API_URL` to the deployed API URL.
+Deploy only the frontend from this workspace. Set these provider environment variables:
 
-Backend deployment can use Render, Railway, or a VPS. This repository includes:
+```env
+VITE_API_URL=https://your-backend-domain.com
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
 
-- `render.yaml` for Render Node service + PostgreSQL
-- `apps/api/Dockerfile` for Express API containerization
-- `docker-compose.backend.yml` for API + PostgreSQL
-- `deploy/nginx-skillmap-api.conf.example` for reverse proxy setup
+Build command:
 
-## AI/ML And Data Science Handoff
+```bash
+npm --prefix apps/web run build
+```
 
-The Express API currently uses a deterministic recommendation service so the app can be demonstrated end to end. The AI team can replace or augment the service behind the same contract with:
+Build output:
 
-- TensorFlow model export (`.keras` or SavedModel)
-- Inference service through Flask/FastAPI
-- Generative AI as a secondary feature for roadmap explanation
-- TensorBoard logs and model evaluation artifacts
-
-The Data Science team can connect their outputs through dashboard-ready artifacts:
-
-- Data dictionary
-- EDA visualizations
-- Feature engineering outputs
-- A/B testing results
-- Streamlit dashboard URL
-- Final technical report PDF
+```txt
+apps/web/dist
+```

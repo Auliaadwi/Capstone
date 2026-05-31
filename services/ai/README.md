@@ -1,12 +1,16 @@
-# Reserved For AI/ML And Data Science Integration
+# Legacy AI/ML Service
 
-Folder ini disiapkan untuk tim AI/Data Science ketika model analisis CV dan rekomendasi SkillMap mulai diintegrasikan.
+Folder ini adalah service Flask lama untuk eksperimen analisis CV. Jalur aplikasi aktif tidak memakai service ini.
 
-Untuk fase MVP, analisis deterministik berjalan di Express API `apps/api/src/services/analysis.js` agar demo full-stack tetap stabil. Tim AI dapat menggantinya dengan service Flask/FastAPI mandiri untuk inference model TensorFlow, lalu Express tetap menjadi API utama yang dipakai frontend.
+Jalur aktif saat ini:
 
-Kontrak integrasi yang sudah tersedia:
+- Frontend: `apps/web`
+- Backend utama: `../BE-Capstone`
+- Service AI/model production: `../skillmap-ai`
 
-- `POST /api/cv/upload` untuk skill extraction dari CV/profile
-- `POST /api/quiz/submit` untuk sinyal kesiapan dari quiz
-- `POST /api/recommendations` untuk learning path personal
-- `GET /api/dashboard/overview` untuk insight dashboard
+Backend utama membaca `AI_SERVICE_URL` dari `../BE-Capstone/server.env` dan mengharapkan endpoint `POST /predict` sesuai kontrak di [`../../docs/contracts/AI_API_CONTRACT.md`](../../docs/contracts/AI_API_CONTRACT.md).
+
+Endpoint lama di folder ini:
+
+- `POST /api/ai/cv/analyze`
+- `GET /health`

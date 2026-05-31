@@ -9,7 +9,7 @@ Dokumen ini menjelaskan batasan MVP SkillMap agar ruang lingkup demo, pengembang
 - Upload CV hanya mendukung file PDF. Format DOC, DOCX, gambar, dan tautan eksternal belum didukung.
 - Profil singkat hanya berisi informasi yang belum masuk di CV, bukan data kontak seperti email, nomor WhatsApp, atau domisili.
 - Target karier tidak dipilih manual di awal. Sistem menebak target role dari isi CV, posisi yang dicari, skill tambahan, dan profil singkat.
-- Mini quiz masih berbentuk pertanyaan YES/NO sederhana untuk menentukan cabang rekomendasi karier atau e-course.
+- Mini quiz membandingkan beberapa role teratas dari hasil job match untuk memvalidasi minat karier pengguna.
 - Fitur akun, riwayat user lintas perangkat, notifikasi, dan export laporan belum termasuk dalam MVP.
 
 ## Batasan AI dan Data
