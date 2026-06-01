@@ -653,6 +653,12 @@ function App() {
     : 'Jawaban kuis singkat akan membantu memilih peran yang paling kamu minati dari daftar rekomendasi.';
   const activePage = standalonePages[currentPage] || flowPages.find((page) => page.id === currentPage) || flowPages[0];
   const isFlowPage = flowPages.some((page) => page.id === currentPage);
+  const accountTargetPage = currentUser
+    ? (currentPage === 'profile' ? 'history' : 'profile')
+    : 'auth';
+  const accountButtonLabel = currentUser
+    ? (currentPage === 'profile' ? 'Riwayat' : 'Profil')
+    : 'Masuk';
   const missingBiodataFields = useMemo(
     () => requiredBiodataFields.filter((field) => !hasMeaningfulText(biodata[field.id])),
     [biodata, requiredBiodataFields]
@@ -1147,9 +1153,9 @@ function App() {
           <button
             className="account-button"
             type="button"
-            onClick={() => goToPage(currentUser ? 'profile' : 'auth', { force: true })}
+            onClick={() => goToPage(accountTargetPage, { force: true })}
           >
-            {currentUser ? 'Profil' : 'Masuk'}
+            {accountButtonLabel}
           </button>
         </div>
       </header>
@@ -1285,25 +1291,11 @@ function App() {
                   <button className="secondary-button" type="button" onClick={loadProfileData} disabled={isProfileLoading}>
                     {isProfileLoading ? 'Memuat...' : 'Muat ulang'}
                   </button>
-                  <button className="secondary-button" type="button" onClick={() => goToPage('history', { force: true })}>
-                    Lihat Riwayat
-                  </button>
                   <button className="primary-button" type="button" onClick={handleSignOut}>
                     Keluar
                   </button>
                 </div>
               </aside>
-
-              <article className="account-panel profile-summary-card">
-                <span className="panel-label">Riwayat CV</span>
-                <h3>Hasil analisis dipisah ke halaman riwayat.</h3>
-                <p className="panel-helper">
-                  Buka halaman riwayat untuk melihat daftar CV yang pernah dianalisis dan skor kecocokannya.
-                </p>
-                <button className="primary-button" type="button" onClick={() => goToPage('history', { force: true })}>
-                  Buka Riwayat
-                </button>
-              </article>
             </div>
           )}
         </section>
