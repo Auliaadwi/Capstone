@@ -99,52 +99,52 @@ const getFlowPageNumber = (pageId) => flowPageLookup[pageId]?.number || '--';
 const journeyCards = [
   {
     icon: 'scan',
-    title: 'Unggah CV sebagai sumber utama',
+    title: 'Masukkan CV kamu',
     description:
-      'Pengguna mengunggah CV PDF agar sistem dapat membaca pengalaman, keterampilan, dan sinyal karier dari dokumen utama.',
-    points: ['CV PDF sebagai awal', 'Dokumen jadi acuan']
+      'Unggah CV PDF. SkillMap akan membaca pengalaman dan kemampuan yang sudah tertulis di sana.',
+    points: ['Mulai dari CV', 'Tidak perlu isi data panjang']
   },
   {
     icon: 'brain',
-    title: 'Profil singkat pelengkap',
+    title: 'Tambahkan cerita singkat',
     description:
-      'Profil singkat dipakai hanya untuk menjelaskan hal penting yang belum masuk ke CV, bukan data kontak atau biodata umum.',
-    points: ['Konteks di luar CV', 'Target dan catatan tambahan']
+      'Tulis hal penting yang belum ada di CV, seperti pekerjaan yang kamu incar atau kemampuan yang sedang dipelajari.',
+    points: ['Ceritakan targetmu', 'Tambah konteks penting']
   },
   {
     icon: 'map',
-    title: 'Kecocokan kerja dalam persen',
+    title: 'Lihat pekerjaan yang cocok',
     description:
-      'Keterampilan pengguna dibandingkan dengan beberapa peran, lalu ditampilkan sebagai persentase kecocokan.',
-    points: ['Rekomendasi pekerjaan', 'Prioritas pengembangan']
+      'SkillMap membandingkan CV kamu dengan beberapa pilihan pekerjaan, lalu menunjukkan mana yang paling cocok.',
+    points: ['Pekerjaan paling cocok', 'Yang perlu ditingkatkan']
   },
   {
     icon: 'trend',
-    title: 'Kuis singkat karier',
+    title: 'Jawab kuis singkat',
     description:
-      'Pertanyaan singkat membantu menyesuaikan rekomendasi akhir dengan minat pengguna.',
-    points: ['Validasi minat', 'Peran akhir']
+      'Pilih jawaban yang paling sesuai dengan minatmu agar rekomendasi akhirnya lebih pas.',
+    points: ['Sesuaikan minat', 'Pilih arah karier']
   },
   {
     icon: 'result',
-    title: 'Hasil akhir dari AI',
+    title: 'Dapatkan hasil akhir',
     description:
-      'Hasil akhir menggabungkan CV, kecocokan kerja, dan kuis singkat menjadi rekomendasi peran yang paling masuk akal.',
-    points: ['Kesimpulan akhir', 'Fokus rencana belajar']
+      'Kamu akan melihat pekerjaan yang disarankan, alasan singkat, dan fokus belajar berikutnya.',
+    points: ['Rekomendasi jelas', 'Fokus belajar']
   },
   {
     icon: 'check',
-    title: 'Dasbor wawasan karier',
+    title: 'Ikuti rencana belajar',
     description:
-      'Dasbor menampilkan skor, kekuatan, kesenjangan, rencana belajar, dan rekomendasi yang bisa langsung ditindaklanjuti.',
-    points: ['Wawasan hasil analisis', 'Siap mengambil langkah berikutnya']
+      'Dasbor menampilkan kemampuan yang sudah kuat, kemampuan yang perlu dilatih, dan langkah belajar yang bisa langsung dicoba.',
+    points: ['Lihat prioritas', 'Mulai belajar']
   }
 ];
 
 const heroStats = [
-  { value: '3 menit', label: 'analisis awal' },
-  { value: `${flowPages.length} tahap`, label: 'CV sampai dasbor' },
-  { value: 'AI + kuis', label: 'rekomendasi personal' }
+  { value: '3 menit', label: 'mulai dari CV' },
+  { value: `${flowPages.length} langkah`, label: 'sampai rekomendasi' },
+  { value: 'CV + kuis', label: 'hasil lebih pas' }
 ];
 
 function getPageFromHash() {
@@ -1126,18 +1126,18 @@ function App() {
         </button>
 
         {currentPage === 'home' ? (
-          <nav className="site-nav" aria-label="Navigasi landing page">
+          <nav className="site-nav" aria-label="Navigasi halaman utama">
             <button className="active" type="button" onClick={() => goToHomeSection('home')}>
               Beranda
             </button>
             <button type="button" onClick={() => goToHomeSection('features')}>
-              Fitur
+              Cara Pakai
             </button>
             <button type="button" onClick={() => goToHomeSection('project-fit')}>
               Manfaat
             </button>
             <button type="button" onClick={() => goToHomeSection('contact')}>
-              Kontak
+              Tim
             </button>
           </nav>
         ) : (
@@ -1149,7 +1149,7 @@ function App() {
 
         <div className="header-actions">
           <button className="nav-cta" type="button" onClick={() => goToPage(currentPage === 'home' ? 'cv' : 'home', { force: true })}>
-            {currentPage === 'home' ? 'Mulai Analisis' : 'Beranda'}
+            {currentPage === 'home' ? 'Mulai Sekarang' : 'Beranda'}
           </button>
           <button
             className="account-button"
@@ -1352,19 +1352,18 @@ function App() {
           <div className="hero-copy">
             <span className="eyebrow">
               <Icon name="spark" size={14} />
-              Navigasi karier berbasis AI
+              Bantu pilih arah karier
             </span>
             <h1>SkillMap</h1>
             <p className="hero-lede">
-              Navigator pembelajaran berbasis AI untuk mahasiswa akhir dan lulusan baru
-              yang ingin memahami kesenjangan keterampilan, persentase kecocokan kerja, dan rencana belajar paling relevan
-              sebelum melamar kerja.
+              Masukkan CV kamu, lalu SkillMap bantu menunjukkan pekerjaan yang cocok,
+              kemampuan yang perlu dilatih, dan langkah belajar yang bisa kamu mulai.
             </p>
 
             <div className="hero-actions">
               <button className="primary-button" type="button" onClick={() => goToPage('cv', { force: true })}>
                 <Icon name="play" size={17} />
-                Unggah CV
+                Mulai dari CV
               </button>
             </div>
 
@@ -1382,10 +1381,10 @@ function App() {
 
         <section className="journey-section" id="features">
           <div className="section-heading">
-            <h2>Alur Pengguna SkillMap</h2>
+            <h2>Cara Pakai SkillMap</h2>
             <p>
-              Alurnya dirancang seperti pencocok karier: CV menjadi dasar analisis, profil singkat melengkapi konteks,
-              pekerjaan diurutkan berdasarkan kecocokan, lalu kuis singkat memvalidasi hasil akhir sebelum masuk ke dasbor pribadi.
+              Mulai dari CV, tambahkan sedikit cerita tentang tujuanmu, lalu lihat pekerjaan yang cocok
+              dan rencana belajar yang bisa langsung diikuti.
             </p>
           </div>
 
@@ -1883,23 +1882,23 @@ function App() {
 
         <section className="insight-section" id="project-fit">
           <div className="insight-copy">
-            <span className="section-kicker">Untuk semua pencari kerja</span>
-            <h2>Siap bantu rencana kariermu</h2>
+            <span className="section-kicker">Untuk mahasiswa dan lulusan baru</span>
+            <h2>Biar langkahmu lebih jelas</h2>
             <p>
-              SkillMap membantu kamu membaca kekuatan dari CV, melihat kesenjangan keterampilan yang perlu
-              ditutup, dan memilih langkah belajar yang paling relevan sebelum melamar kerja.
+              SkillMap membantu kamu melihat kelebihan dari CV, bagian yang masih perlu dilatih,
+              dan urutan belajar yang lebih mudah diikuti sebelum melamar kerja.
             </p>
           </div>
 
           <div className="feature-panel">
             <div className="feature-module-list">
-              <span>Fitur utama</span>
+              <span>Yang bisa kamu lakukan</span>
               {[
-                'Ekstraksi keterampilan dari CV',
-                'Kuis adaptif',
-                'Pemetaan kesenjangan keterampilan',
-                'Jalur belajar personal',
-                'Wawasan dasbor'
+                'Baca kemampuan dari CV',
+                'Lihat pekerjaan yang cocok',
+                'Tahu kemampuan yang perlu dilatih',
+                'Dapat rencana belajar',
+                'Simpan hasil di profil'
               ].map((item) => (
                 <div className="requirement-item" key={item}>
                   <Icon name="check" size={14} />
@@ -1915,7 +1914,10 @@ function App() {
       <footer className="site-footer" id="contact">
         <div>
           <strong>SkillMap</strong>
-          <p>2026 SkillMap AI. Navigator pembelajaran keterampilan yang dipersonalisasi.</p>
+          <p>2026 SkillMap. Bantu baca CV, cari arah kerja, dan susun rencana belajar.</p>
+          <p className="footer-credit">
+            Dibuat oleh Arhab - Untirta, Aulia - Untirta, Dhini - Untirta, Bintang - Gunadarma, Hanif - Gunadarma, Anna - Unsoed.
+          </p>
         </div>
       </footer>
     </div>

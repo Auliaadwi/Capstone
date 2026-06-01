@@ -2706,6 +2706,13 @@ a {
   line-height: 1.55;
 }
 
+.site-footer .footer-credit {
+  max-width: 720px;
+  margin-top: 14px;
+  color: rgba(248, 251, 247, 0.54);
+  font-size: 0.78rem;
+}
+
 .site-footer nav {
   display: flex;
   flex-wrap: wrap;
