@@ -157,7 +157,7 @@ function getPageFromHash() {
     return 'home';
   }
 
-  if (pageId === 'auth' || pageId === 'profile') {
+  if (pageId === 'auth' || pageId === 'profile' || pageId === 'history') {
     return pageId;
   }
 
@@ -536,7 +536,8 @@ function Icon({ name, size = 18 }) {
 
 const standalonePages = {
   auth: { number: 'Akun', label: 'Masuk / Daftar', title: 'Masuk ke SkillMap', description: 'Masuk untuk menyimpan hasil analisis CV dan membuka riwayatnya kapan saja.' },
-  profile: { number: 'Profil', label: 'Profil', title: 'Profil dan riwayat analisis', description: 'Lihat akun serta riwayat hasil analisis CV yang tersimpan.' }
+  profile: { number: 'Profil', label: 'Profil', title: 'Profil akun', description: 'Lihat informasi akun dan ringkasan aktivitas kamu.' },
+  history: { number: 'Riwayat', label: 'Riwayat CV', title: 'Riwayat analisis CV', description: 'Lihat hasil analisis CV yang pernah tersimpan.' }
 };
 
 function App() {
@@ -657,6 +658,7 @@ function App() {
     ? (finalResult?.quizSummary || `Kuis singkat menguatkan arah ${quizResult.selectedRoleName || dashboardDecisionTitle} berdasarkan tipe pekerjaan yang kamu pilih.`)
     : 'Jawaban kuis singkat akan membantu memilih peran yang paling kamu minati dari daftar rekomendasi.';
   const activePage = standalonePages[currentPage] || flowPages.find((page) => page.id === currentPage) || flowPages[0];
+  const isFlowPage = flowPages.some((page) => page.id === currentPage);
   const missingBiodataFields = useMemo(
     () => requiredBiodataFields.filter((field) => !hasMeaningfulText(biodata[field.id])),
     [biodata, requiredBiodataFields]
@@ -1142,7 +1144,7 @@ function App() {
           </nav>
         ) : (
           <div className="header-step-summary" aria-live="polite">
-            <span>Langkah {activePage.number} / {flowPageTotal}</span>
+            {isFlowPage && <span>Langkah {activePage.number} / {flowPageTotal}</span>}
             <strong>{activePage.label}</strong>
           </div>
         )}
@@ -1246,7 +1248,7 @@ function App() {
 
             <article className="account-panel">
               <span className="panel-label">Riwayat tersimpan</span>
-              <h3>Setelah masuk, setiap hasil analisis CV akan tersimpan di profil kamu.</h3>
+              <h3>Setelah masuk, setiap hasil analisis CV akan tersimpan di riwayat kamu.</h3>
               <p className="panel-helper">
                 Masuk agar hasil analisis CV kamu tersimpan dan bisa dibuka lagi kapan saja.
               </p>
@@ -1260,14 +1262,14 @@ function App() {
         <section className="account-section profile-section">
           <div className="section-heading compact">
             <span className="page-counter">Profil</span>
-            <h2>Profil dan riwayat analisis CV</h2>
-            <p>Lihat hasil analisis yang tersimpan untuk akun kamu.</p>
+            <h2>Profil akun</h2>
+            <p>Lihat informasi akun dan ringkasan aktivitas kamu.</p>
           </div>
 
           {!currentUser ? (
             <article className="account-panel profile-empty">
-              <h3>Masuk terlebih dahulu untuk melihat riwayat.</h3>
-              <p className="panel-helper">Riwayat analisis CV hanya bisa ditampilkan setelah kamu masuk.</p>
+              <h3>Masuk terlebih dahulu untuk melihat profil.</h3>
+              <p className="panel-helper">Profil hanya bisa ditampilkan setelah kamu masuk.</p>
               <button className="primary-button" type="button" onClick={() => goToPage('auth', { force: true })}>
                 Masuk / Daftar
               </button>
@@ -1292,21 +1294,60 @@ function App() {
                   <button className="secondary-button" type="button" onClick={loadProfileData} disabled={isProfileLoading}>
                     {isProfileLoading ? 'Memuat...' : 'Muat ulang'}
                   </button>
+                  <button className="secondary-button" type="button" onClick={() => goToPage('history', { force: true })}>
+                    Lihat Riwayat
+                  </button>
                   <button className="primary-button" type="button" onClick={handleSignOut}>
                     Keluar
                   </button>
                 </div>
               </aside>
 
+              <article className="account-panel profile-summary-card">
+                <span className="panel-label">Riwayat CV</span>
+                <h3>Hasil analisis dipisah ke halaman riwayat.</h3>
+                <p className="panel-helper">
+                  Buka halaman riwayat untuk melihat daftar CV yang pernah dianalisis dan skor kecocokannya.
+                </p>
+                <button className="primary-button" type="button" onClick={() => goToPage('history', { force: true })}>
+                  Buka Riwayat
+                </button>
+              </article>
+            </div>
+          )}
+        </section>
+
+        <section className="account-section history-section">
+          <div className="section-heading compact">
+            <span className="page-counter">Riwayat</span>
+            <h2>Riwayat analisis CV</h2>
+            <p>Lihat kembali hasil analisis CV yang pernah kamu simpan.</p>
+          </div>
+
+          {!currentUser ? (
+            <article className="account-panel profile-empty">
+              <h3>Masuk terlebih dahulu untuk melihat riwayat.</h3>
+              <p className="panel-helper">Riwayat analisis CV hanya bisa ditampilkan setelah kamu masuk.</p>
+              <button className="primary-button" type="button" onClick={() => goToPage('auth', { force: true })}>
+                Masuk / Daftar
+              </button>
+            </article>
+          ) : (
+            <div className="history-page-grid">
               <section className="account-panel history-panel">
                 <div className="history-heading">
                   <div>
                     <span className="panel-label">Riwayat CV</span>
                     <h3>Analisis terbaru</h3>
                   </div>
-                  <button className="secondary-button" type="button" onClick={() => goToPage('cv', { force: true })}>
-                    Analisis CV baru
-                  </button>
+                  <div className="history-heading-actions">
+                    <button className="secondary-button" type="button" onClick={() => goToPage('profile', { force: true })}>
+                      Kembali ke Profil
+                    </button>
+                    <button className="primary-button" type="button" onClick={() => goToPage('cv', { force: true })}>
+                      Analisis CV baru
+                    </button>
+                  </div>
                 </div>
 
                 {isProfileLoading ? (

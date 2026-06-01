@@ -77,12 +77,14 @@ a {
 
 .page-shell:not(.page-home) {
   background:
-    linear-gradient(180deg, #10201e 0%, #122824 44%, #edf5ef 44%, #edf5ef 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(237, 245, 239, 0.96) 32%, #e2efe7 100%),
+    var(--page);
 }
 
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 18px;
+  left: 50%;
   z-index: 20;
   display: grid;
   width: calc(100% - 40px);
@@ -91,7 +93,7 @@ a {
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 18px;
-  margin: 18px auto 0;
+  margin: 0;
   padding: 8px 10px 8px 18px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
@@ -99,6 +101,7 @@ a {
   color: #f8fbf7;
   box-shadow: 0 20px 60px rgba(5, 17, 14, 0.2);
   backdrop-filter: blur(18px);
+  transform: translateX(-50%);
 }
 
 .brand {
@@ -248,11 +251,7 @@ a {
 }
 
 .page-home .site-header {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
   max-width: 900px;
-  margin: 0;
 }
 
 .page-home .nav-cta {
@@ -1037,8 +1036,8 @@ a {
 .workspace-section {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 70px clamp(18px, 4vw, 40px) 118px;
-  color: #f8fbf7;
+  padding: 122px clamp(18px, 4vw, 40px) 118px;
+  color: var(--text);
   scroll-margin-top: 120px;
 }
 
@@ -1051,13 +1050,15 @@ a {
 .page-home .workspace-section,
 .page-auth .workspace-section,
 .page-profile .workspace-section,
+.page-history .workspace-section,
 .page-dashboard .workspace-section,
 .page-shell:not(.page-dashboard) .dashboard-section {
   display: none;
 }
 
 .page-shell:not(.page-auth) .auth-section,
-.page-shell:not(.page-profile) .profile-section {
+.page-shell:not(.page-profile) .profile-section,
+.page-shell:not(.page-history) .history-section {
   display: none;
 }
 
@@ -1080,7 +1081,7 @@ a {
 .section-heading.compact {
   max-width: 780px;
   margin-bottom: 22px;
-  color: #f8fbf7;
+  color: var(--text);
 }
 
 .page-counter {
@@ -1093,7 +1094,7 @@ a {
   border: 1px solid rgba(242, 192, 120, 0.32);
   border-radius: 999px;
   background: rgba(242, 192, 120, 0.1);
-  color: var(--warm);
+  color: #8b6426;
   font-size: 0.7rem;
   font-weight: 950;
 }
@@ -1105,7 +1106,7 @@ a {
   border: 1px solid rgba(238, 143, 138, 0.34);
   border-radius: 8px;
   background: rgba(238, 143, 138, 0.1);
-  color: #ffd5d2 !important;
+  color: #8f312c !important;
   text-align: center;
 }
 
@@ -1910,7 +1911,7 @@ a {
 .dashboard-section {
   max-width: 1240px;
   margin: 0 auto;
-  padding: 40px clamp(18px, 4vw, 40px) 118px;
+  padding: 122px clamp(18px, 4vw, 40px) 118px;
   color: #f8fbf7;
   scroll-margin-top: 120px;
 }
@@ -2347,8 +2348,8 @@ a {
 .account-section {
   width: min(100%, 1120px);
   margin: 0 auto;
-  padding: 70px clamp(18px, 4vw, 40px) 118px;
-  color: #f8fbf7;
+  padding: 122px clamp(18px, 4vw, 40px) 118px;
+  color: var(--text);
 }
 
 .account-grid,
@@ -2452,6 +2453,18 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.history-page-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.history-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .history-list {
@@ -2804,7 +2817,7 @@ a {
     width: calc(100% - 24px);
     grid-template-columns: 1fr auto;
     gap: 10px;
-    margin-top: 10px;
+    margin: 0;
     border-radius: 24px;
     padding: 10px;
   }
