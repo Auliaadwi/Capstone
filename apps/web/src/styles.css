@@ -2107,17 +2107,19 @@ a {
   align-items: center;
   margin-top: 12px;
   padding: 0 12px;
-  border: 1px solid rgba(134, 215, 169, 0.28);
+  border: 1px solid #6fbd8c;
   border-radius: 8px;
-  background: rgba(134, 215, 169, 0.1);
-  color: #b7f0c8;
+  background: #e2f8eb;
+  color: #0f5135;
   font-size: 0.78rem;
   font-weight: 950;
   text-decoration: none;
 }
 
 .dashboard-course-link:hover {
-  background: rgba(134, 215, 169, 0.18);
+  border-color: #247455;
+  background: #c8efd8;
+  color: #083d2a;
 }
 
 .empty-state-text {
