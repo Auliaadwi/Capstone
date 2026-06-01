@@ -739,7 +739,7 @@ function App() {
       setProfileData(profileResponse.data);
       setCvHistory(historyResponse.data.history || []);
     } catch (error) {
-      setAuthMessage(error.response?.data?.error || 'Riwayat belum bisa dimuat. Pastikan env Supabase backend sudah lengkap.');
+      setAuthMessage(error.response?.data?.error || 'Riwayat belum bisa dimuat. Coba muat ulang beberapa saat lagi.');
     } finally {
       setIsProfileLoading(false);
     }
@@ -753,7 +753,7 @@ function App() {
   const handleAuthSubmit = async (event) => {
     event.preventDefault();
     if (!isSupabaseConfigured || !supabase) {
-      setAuthMessage('Supabase belum dikonfigurasi. Isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY.');
+      setAuthMessage('Fitur masuk belum siap. Kamu tetap bisa lanjut analisis CV tanpa masuk.');
       return;
     }
 
@@ -808,11 +808,11 @@ function App() {
         const nextRoles = Array.isArray(rolesResponse.data.roles) ? rolesResponse.data.roles : [];
         setRoles(nextRoles);
         if (!nextRoles.length) {
-          setStatusMessage('Data peran dari backend kosong. Analisis tetap bisa berjalan dengan target bawaan, tetapi konfigurasi backend perlu dicek.');
+          setStatusMessage('Data peran belum tersedia. Analisis tetap bisa berjalan dengan pilihan bawaan.');
         }
       } catch (error) {
         setRoles([]);
-        setStatusMessage(error.response?.data?.error || 'Gagal memuat data peran dari backend. Pastikan VITE_API_URL mengarah ke API SkillMap.');
+        setStatusMessage(error.response?.data?.error || 'Gagal memuat data peran. Coba periksa koneksi lalu muat ulang halaman.');
       }
     };
 
@@ -977,10 +977,10 @@ function App() {
         const backendQuiz = quizResponse.data.question || null;
         nextCareerFitQuiz = getCareerFitQuestions(backendQuiz).length ? backendQuiz : null;
         if (!nextCareerFitQuiz) {
-          nextStatusMessage = 'Analisis CV berhasil, tetapi backend tidak mengirim pertanyaan kuis singkat.';
+          nextStatusMessage = 'Analisis CV berhasil, tetapi pertanyaan kuis belum tersedia.';
         }
       } catch (quizError) {
-        nextStatusMessage = quizError.response?.data?.error || 'Analisis CV berhasil, tetapi kuis singkat gagal dibuat oleh backend.';
+        nextStatusMessage = quizError.response?.data?.error || 'Analisis CV berhasil, tetapi kuis singkat belum bisa dibuat.';
       }
       setCareerFitQuiz(nextCareerFitQuiz);
       setHasScannedCv(true);
@@ -1196,7 +1196,7 @@ function App() {
 
               {!isSupabaseConfigured && (
                 <p className="auth-warning">
-                  Supabase belum dikonfigurasi. Isi `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` di environment frontend.
+                  Fitur masuk belum siap. Kamu tetap bisa lanjut analisis CV tanpa masuk.
                 </p>
               )}
 
@@ -1248,7 +1248,7 @@ function App() {
               <span className="panel-label">Riwayat tersimpan</span>
               <h3>Setelah masuk, setiap hasil analisis CV akan tersimpan di profil kamu.</h3>
               <p className="panel-helper">
-                SkillMap menggunakan akun Supabase untuk mengenali pengguna dan menyimpan riwayat analisis ke database yang terhubung.
+                Masuk agar hasil analisis CV kamu tersimpan dan bisa dibuka lagi kapan saja.
               </p>
               <button className="secondary-button" type="button" onClick={() => goToPage('cv', { force: true })}>
                 Lanjut analisis tanpa membuka profil
@@ -1674,7 +1674,7 @@ function App() {
                 );
               })}
               {!activeCareerFitQuestions.length && (
-                <p className="empty-state-text">Kuis singkat belum tersedia dari backend untuk hasil analisis ini.</p>
+                <p className="empty-state-text">Kuis singkat belum tersedia untuk hasil analisis ini.</p>
               )}
 
               <div className="page-actions step-actions">
@@ -1710,7 +1710,7 @@ function App() {
               <div className="final-result-card">
                 <span>Rekomendasi pekerjaan akhir</span>
                 <strong>{finalResult?.recommendedRoleName || recommendedCareerName || quizResult?.selectedRoleName || bestMatch.name}</strong>
-                <p>{finalResult?.summary || currentInsight.summary || quizResult?.recommendation || careerRecommendation?.summary || 'Hasil akhir belum tersedia dari backend.'}</p>
+                <p>{finalResult?.summary || currentInsight.summary || quizResult?.recommendation || careerRecommendation?.summary || 'Hasil akhir belum tersedia.'}</p>
               </div>
 
               <div className="result-summary-grid">
