@@ -141,12 +141,6 @@ const journeyCards = [
   }
 ];
 
-const heroStats = [
-  { value: '3 menit', label: 'mulai dari CV' },
-  { value: `${flowPages.length} langkah`, label: 'sampai rekomendasi' },
-  { value: 'CV + kuis', label: 'hasil lebih pas' }
-];
-
 function getPageFromHash() {
   if (typeof window === 'undefined') {
     return 'home';
@@ -1138,9 +1132,6 @@ function App() {
             <button type="button" onClick={() => goToHomeSection('project-fit')}>
               Manfaat
             </button>
-            <button type="button" onClick={() => goToHomeSection('contact')}>
-              Tim
-            </button>
           </nav>
         ) : (
           <div className="header-step-summary" aria-live="polite">
@@ -1406,15 +1397,6 @@ function App() {
                 <Icon name="play" size={17} />
                 Mulai dari CV
               </button>
-            </div>
-
-            <div className="hero-proof-row" aria-label="Ringkasan produk SkillMap">
-              {heroStats.map((stat) => (
-                <div className="hero-stat" key={stat.label}>
-                  <strong>{stat.value}</strong>
-                  <span>{stat.label}</span>
-                </div>
-              ))}
             </div>
           </div>
 
