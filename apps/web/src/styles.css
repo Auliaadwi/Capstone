@@ -2317,6 +2317,11 @@ a {
   align-items: start;
 }
 
+.page-profile .profile-grid {
+  grid-template-columns: minmax(0, 680px);
+  justify-content: center;
+}
+
 .account-panel {
   display: grid;
   gap: 18px;

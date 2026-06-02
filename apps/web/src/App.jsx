@@ -653,6 +653,12 @@ function App() {
     : 'Jawaban kuis singkat akan membantu memilih peran yang paling kamu minati dari daftar rekomendasi.';
   const activePage = standalonePages[currentPage] || flowPages.find((page) => page.id === currentPage) || flowPages[0];
   const isFlowPage = flowPages.some((page) => page.id === currentPage);
+  const accountTargetPage = currentUser
+    ? (currentPage === 'profile' ? 'history' : 'profile')
+    : 'auth';
+  const accountButtonLabel = currentUser
+    ? (currentPage === 'profile' ? 'Riwayat' : 'Profil')
+    : 'Masuk';
   const missingBiodataFields = useMemo(
     () => requiredBiodataFields.filter((field) => !hasMeaningfulText(biodata[field.id])),
     [biodata, requiredBiodataFields]
@@ -1024,6 +1030,26 @@ function App() {
     }
   };
 
+  const startNewAnalysisSession = () => {
+    setBiodata(initialBiodata);
+    setIsBiodataSaved(false);
+    setHasScannedCv(false);
+    setMiniQuizAnswer({});
+    setCareerFitQuiz(null);
+    setAnalysis(emptyAnalysis);
+    setQuizResult(null);
+    setFinalResult(null);
+    setRecommendation(null);
+    setExtractedCvText('');
+    setSelectedCvFile(null);
+    setShowBiodataErrors(false);
+    setShowCvErrors(false);
+    setIsUploading(false);
+    setIsSubmittingQuiz(false);
+    setTargetRole(defaultRole.id);
+    clearStatusMessage();
+  };
+
   const handleQuizSubmit = async () => {
     if (answeredCount < activeCareerFitQuestions.length || !selectedCareerOption) {
       clearStatusMessage();
@@ -1141,15 +1167,24 @@ function App() {
         )}
 
         <div className="header-actions">
-          <button className="nav-cta" type="button" onClick={() => goToPage(currentPage === 'home' ? 'cv' : 'home', { force: true })}>
+          <button
+            className="nav-cta"
+            type="button"
+            onClick={() => {
+              if (currentPage === 'home') {
+                startNewAnalysisSession();
+              }
+              goToPage(currentPage === 'home' ? 'cv' : 'home', { force: true });
+            }}
+          >
             {currentPage === 'home' ? 'Mulai Sekarang' : 'Beranda'}
           </button>
           <button
             className="account-button"
             type="button"
-            onClick={() => goToPage(currentUser ? 'profile' : 'auth', { force: true })}
+            onClick={() => goToPage(accountTargetPage, { force: true })}
           >
-            {currentUser ? 'Profil' : 'Masuk'}
+            {accountButtonLabel}
           </button>
         </div>
       </header>
@@ -1285,25 +1320,11 @@ function App() {
                   <button className="secondary-button" type="button" onClick={loadProfileData} disabled={isProfileLoading}>
                     {isProfileLoading ? 'Memuat...' : 'Muat ulang'}
                   </button>
-                  <button className="secondary-button" type="button" onClick={() => goToPage('history', { force: true })}>
-                    Lihat Riwayat
-                  </button>
                   <button className="primary-button" type="button" onClick={handleSignOut}>
                     Keluar
                   </button>
                 </div>
               </aside>
-
-              <article className="account-panel profile-summary-card">
-                <span className="panel-label">Riwayat CV</span>
-                <h3>Hasil analisis dipisah ke halaman riwayat.</h3>
-                <p className="panel-helper">
-                  Buka halaman riwayat untuk melihat daftar CV yang pernah dianalisis dan skor kecocokannya.
-                </p>
-                <button className="primary-button" type="button" onClick={() => goToPage('history', { force: true })}>
-                  Buka Riwayat
-                </button>
-              </article>
             </div>
           )}
         </section>
@@ -1335,7 +1356,14 @@ function App() {
                     <button className="secondary-button" type="button" onClick={() => goToPage('profile', { force: true })}>
                       Kembali ke Profil
                     </button>
-                    <button className="primary-button" type="button" onClick={() => goToPage('cv', { force: true })}>
+                    <button
+                      className="primary-button"
+                      type="button"
+                      onClick={() => {
+                        startNewAnalysisSession();
+                        goToPage('cv', { force: true });
+                      }}
+                    >
                       Analisis CV baru
                     </button>
                   </div>
@@ -1393,7 +1421,14 @@ function App() {
             </p>
 
             <div className="hero-actions">
-              <button className="primary-button" type="button" onClick={() => goToPage('cv', { force: true })}>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => {
+                  startNewAnalysisSession();
+                  goToPage('cv', { force: true });
+                }}
+              >
                 <Icon name="play" size={17} />
                 Mulai dari CV
               </button>
@@ -1896,7 +1931,14 @@ function App() {
               <button className="secondary-button" type="button" onClick={() => goToPage('quiz')}>
                 Kembali ke Kuis Singkat
               </button>
-              <button className="primary-button" type="button" onClick={() => goToPage('cv', { force: true })}>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => {
+                  startNewAnalysisSession();
+                  goToPage('cv', { force: true });
+                }}
+              >
                 Ulangi dari Unggah CV
               </button>
             </div>
