@@ -2717,33 +2717,19 @@ a {
   text-transform: uppercase;
 }
 
-.footer-tech ol {
+.footer-tech ul {
   display: grid;
   gap: 11px;
   padding: 0;
   margin: 0;
   list-style: none;
-  counter-reset: footer-member;
 }
 
 .footer-tech li {
-  position: relative;
-  padding-left: 28px;
   color: rgba(248, 251, 247, 0.84);
   font-size: 0.82rem;
   font-weight: 850;
   line-height: 1.45;
-}
-
-.footer-tech li::before {
-  position: absolute;
-  left: 0;
-  top: 0.08rem;
-  color: rgba(242, 192, 120, 0.82);
-  counter-increment: footer-member;
-  content: counter(footer-member, decimal-leading-zero);
-  font-size: 0.68rem;
-  font-weight: 950;
 }
 
 .footer-tech li span {

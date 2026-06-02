@@ -1987,24 +1987,24 @@ function App() {
           <div className="footer-tech-grid">
             <section className="footer-tech">
               <h3>Full-stack</h3>
-              <ol>
+              <ul>
                 <li>Aulia Dwi Fathonah <span>Universitas Sultan Ageng Tirtayasa</span></li>
                 <li>Naufal Arhab Muhammad <span>Universitas Sultan Ageng Tirtayasa</span></li>
-              </ol>
+              </ul>
             </section>
             <section className="footer-tech">
               <h3>Data Science</h3>
-              <ol>
+              <ul>
                 <li>Anna Ramadhan <span>Universitas Jenderal Soedirman</span></li>
                 <li>Wakhida Fajar Ardhiani <span>Universitas Sultan Ageng Tirtayasa</span></li>
-              </ol>
+              </ul>
             </section>
             <section className="footer-tech">
               <h3>AI Engineer</h3>
-              <ol>
+              <ul>
                 <li>Hanif Fadhilah <span>Universitas Gunadarma</span></li>
                 <li>Ade Bintang Septian <span>Universitas Gunadarma</span></li>
-              </ol>
+              </ul>
             </section>
           </div>
         </div>
