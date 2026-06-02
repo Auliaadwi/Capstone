@@ -1287,7 +1287,6 @@ function App() {
 
         <section className="account-section profile-section">
           <div className="section-heading compact">
-            <span className="page-counter">Profil</span>
             <h2>Profil akun</h2>
             <p>Lihat informasi akun dan ringkasan aktivitas kamu.</p>
           </div>
@@ -1331,7 +1330,6 @@ function App() {
 
         <section className="account-section history-section">
           <div className="section-heading compact">
-            <span className="page-counter">Riwayat</span>
             <h2>Riwayat analisis CV</h2>
             <p>Lihat kembali hasil analisis CV yang pernah kamu simpan.</p>
           </div>
