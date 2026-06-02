@@ -807,6 +807,7 @@ function App() {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
+        const rolesResponse = await fetchRoles();
         const nextRoles = Array.isArray(rolesResponse.data.roles) ? rolesResponse.data.roles : [];
         setRoles(nextRoles);
         if (!nextRoles.length) {
@@ -949,11 +950,10 @@ function App() {
 
     try {
       const profileText = formatBiodataText(biodata);
-      const targetJob = getMeaningfulText(biodata.expectedPosition);
       const inferredTargetRole = inferTargetRoleIdFromProfile(biodata, roles, targetRole);
       const inferredRole = roles.find((role) => role.id === inferredTargetRole) || activeRole;
       setTargetRole(inferredTargetRole);
-      const response = await uploadCv(file, inferredRole.domain || 'technology', inferredTargetRole, profileText, targetJob);
+      const response = await uploadCv(file, inferredRole.domain || 'technology', inferredTargetRole, profileText, '');
       const nextAnalysis = {
         ...response.data,
         jobMatches: (response.data.jobMatches || []).filter(hasActionableJobMatch)
