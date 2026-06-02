@@ -2697,35 +2697,61 @@ a {
   text-transform: uppercase;
 }
 
-.footer-university-grid {
+.footer-tech-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: clamp(18px, 4vw, 42px);
 }
 
-.footer-university {
+.footer-tech {
   display: grid;
-  gap: 8px;
-  min-height: 120px;
-  padding: 18px;
-  border: 1px solid rgba(248, 251, 247, 0.12);
-  border-radius: 8px;
-  background: rgba(248, 251, 247, 0.045);
+  gap: 12px;
+  align-content: start;
 }
 
-.footer-university h3 {
+.footer-tech h3 {
   margin: 0;
-  color: #f8fbf7;
-  font-size: 0.9rem;
+  color: var(--warm);
+  font-size: 0.86rem;
   line-height: 1.35;
+  text-transform: uppercase;
 }
 
-.footer-university p {
-  max-width: none;
+.footer-tech ol {
+  display: grid;
+  gap: 11px;
+  padding: 0;
   margin: 0;
-  color: rgba(248, 251, 247, 0.64);
+  list-style: none;
+  counter-reset: footer-member;
+}
+
+.footer-tech li {
+  position: relative;
+  padding-left: 28px;
+  color: rgba(248, 251, 247, 0.84);
   font-size: 0.82rem;
-  font-weight: 750;
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.footer-tech li::before {
+  position: absolute;
+  left: 0;
+  top: 0.08rem;
+  color: rgba(242, 192, 120, 0.82);
+  counter-increment: footer-member;
+  content: counter(footer-member, decimal-leading-zero);
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.footer-tech li span {
+  display: block;
+  margin-top: 3px;
+  color: rgba(248, 251, 247, 0.5);
+  font-size: 0.74rem;
+  font-weight: 700;
 }
 
 .site-footer nav {
@@ -2816,7 +2842,7 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .footer-university-grid {
+  .footer-tech-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -3032,7 +3058,7 @@ a {
     padding: 44px 18px;
   }
 
-  .footer-university-grid {
+  .footer-tech-grid {
     grid-template-columns: 1fr;
   }
 }

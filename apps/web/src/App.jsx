@@ -1984,18 +1984,27 @@ function App() {
 
         <div className="footer-credits" aria-label="Dibuat oleh tim SkillMap">
           <span className="footer-credit-label">Dibuat oleh</span>
-          <div className="footer-university-grid">
-            <section className="footer-university">
-              <h3>Universitas Sultan Ageng Tirtayasa</h3>
-              <p>Arhab, Aulia, Dhini</p>
+          <div className="footer-tech-grid">
+            <section className="footer-tech">
+              <h3>Full-stack</h3>
+              <ol>
+                <li>Aulia Dwi Fathonah <span>Universitas Sultan Ageng Tirtayasa</span></li>
+                <li>Naufal Arhab Muhammad <span>Universitas Sultan Ageng Tirtayasa</span></li>
+              </ol>
             </section>
-            <section className="footer-university">
-              <h3>Universitas Gunadarma</h3>
-              <p>Bintang, Hanif</p>
+            <section className="footer-tech">
+              <h3>Data Science</h3>
+              <ol>
+                <li>Anna Ramadhan <span>Universitas Jenderal Soedirman</span></li>
+                <li>Wakhida Fajar Ardhiani <span>Universitas Sultan Ageng Tirtayasa</span></li>
+              </ol>
             </section>
-            <section className="footer-university">
-              <h3>Universitas Jenderal Soedirman</h3>
-              <p>Anna</p>
+            <section className="footer-tech">
+              <h3>AI Engineer</h3>
+              <ol>
+                <li>Hanif Fadhilah <span>Universitas Gunadarma</span></li>
+                <li>Ade Bintang Septian <span>Universitas Gunadarma</span></li>
+              </ol>
             </section>
           </div>
         </div>
