@@ -1977,12 +1977,27 @@ function App() {
       </main>
 
       <footer className="site-footer" id="contact">
-        <div>
+        <div className="footer-brand">
           <strong>SkillMap</strong>
           <p>2026 SkillMap. Bantu baca CV, cari arah kerja, dan susun rencana belajar.</p>
-          <p className="footer-credit">
-            Dibuat oleh Arhab - Untirta, Aulia - Untirta, Dhini - Untirta, Bintang - Gunadarma, Hanif - Gunadarma, Anna - Unsoed.
-          </p>
+        </div>
+
+        <div className="footer-credits" aria-label="Dibuat oleh tim SkillMap">
+          <span className="footer-credit-label">Dibuat oleh</span>
+          <div className="footer-university-grid">
+            <section className="footer-university">
+              <h3>Universitas Sultan Ageng Tirtayasa</h3>
+              <p>Arhab, Aulia, Dhini</p>
+            </section>
+            <section className="footer-university">
+              <h3>Universitas Gunadarma</h3>
+              <p>Bintang, Hanif</p>
+            </section>
+            <section className="footer-university">
+              <h3>Universitas Jenderal Soedirman</h3>
+              <p>Anna</p>
+            </section>
+          </div>
         </div>
       </footer>
     </div>
