@@ -5,20 +5,14 @@ import {
   createRecommendation,
   fetchCvHistory,
   fetchProfile,
-  fetchRoles,
   setAuthToken,
+  submitQuiz,
   uploadCv
 } from './api';
 import { isSupabaseConfigured, supabase } from './supabaseClient';
 
-const defaultRole = {
-  id: 'fullstack-web-developer',
-  name: 'Pengembang Web Full-Stack Junior',
-  domain: 'technology',
-  requiredSkills: ['JavaScript', 'React', 'Express', 'REST API', 'PostgreSQL', 'Deployment', 'Testing'],
-  businessGoal: 'Siap melamar posisi full-stack junior dengan portofolio end-to-end.',
-  marketSignals: ['Integrasi React dan API', 'Backend RESTful', 'Penyimpanan database', 'Deployment publik']
-};
+const defaultTargetRole = '';
+const pendingAiRoleLabel = 'Menunggu hasil analisis';
 
 const emptyAnalysis = {
   extractedSkills: [],
@@ -169,6 +163,14 @@ function scrollToLandingSection(sectionId) {
   }
 }
 
+function getAuthRedirectUrl() {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  return `${window.location.origin}${window.location.pathname}#/profile`;
+}
+
 function isPdfFile(file) {
   if (!file) {
     return false;
@@ -205,48 +207,6 @@ function getPageBlockMessageForState(pageId, guardState) {
   }
 
   return '';
-}
-
-function inferTargetRoleIdFromProfile(biodata, roles, fallbackId) {
-  const profileText = [
-    getMeaningfulText(biodata.expectedPosition),
-    getMeaningfulText(biodata.skills),
-    getMeaningfulText(biodata.profileSummary),
-    getMeaningfulText(biodata.experience)
-  ]
-    .join(' ')
-    .toLowerCase();
-
-  if (!profileText.trim()) {
-    return fallbackId;
-  }
-
-  const roleKeywords = {
-    'fullstack-web-developer': ['web', 'frontend', 'front-end', 'backend', 'back-end', 'fullstack', 'full-stack', 'react', 'javascript', 'api'],
-    'ai-engineer': ['ai', 'machine learning', 'ml', 'model', 'nlp', 'tensorflow', 'pytorch'],
-    'data-scientist': ['data', 'analyst', 'scientist', 'python', 'eda', 'visualisasi', 'dashboard'],
-    'project-manager-digital': ['project', 'manager', 'coordinator', 'koordinator', 'management', 'timeline', 'leadership', 'komunikasi']
-  };
-
-  const scoredRoles = roles.map((role) => {
-    const normalizedRoleText = [
-      role.id,
-      role.name,
-      ...(role.requiredSkills || [])
-    ]
-      .join(' ')
-      .toLowerCase();
-    const configuredKeywords = roleKeywords[role.id] || [];
-    const keywords = [...configuredKeywords, ...normalizedRoleText.split(/[\s/-]+/).filter((word) => word.length > 3)];
-    const score = keywords.reduce((total, keyword) => (
-      profileText.includes(keyword.toLowerCase()) ? total + 1 : total
-    ), 0);
-
-    return { id: role.id, score };
-  });
-
-  const bestRole = scoredRoles.sort((first, second) => second.score - first.score)[0];
-  return bestRole?.score > 0 ? bestRole.id : fallbackId;
 }
 
 function hasMeaningfulText(value) {
@@ -535,8 +495,7 @@ const standalonePages = {
 };
 
 function App() {
-  const [roles, setRoles] = useState([]);
-  const [targetRole, setTargetRole] = useState(defaultRole.id);
+  const [targetRole, setTargetRole] = useState(defaultTargetRole);
   const [biodata, setBiodata] = useState(initialBiodata);
   const [isBiodataSaved, setIsBiodataSaved] = useState(false);
   const [hasScannedCv, setHasScannedCv] = useState(false);
@@ -565,11 +524,6 @@ function App() {
 
   const currentUser = session?.user || null;
 
-  const activeRole = useMemo(
-    () => roles.find((role) => role.id === targetRole) || defaultRole,
-    [roles, targetRole]
-  );
-
   const currentInsight = recommendation || analysis;
   const displayedSkills = (
     currentInsight.skillDimiliki?.length
@@ -594,22 +548,35 @@ function App() {
   const jobMatches = rawJobMatches.filter(hasActionableJobMatch);
   const bestMatch = jobMatches[0] || {
     id: analysis.suggestedRoleId || targetRole,
-    name: analysis.targetRole || activeRole.name,
+    name: analysis.targetRole || analysis.recommendedCareer || pendingAiRoleLabel,
     matchScore: analysis.readinessScore || 0,
     matchedSkills: analysis.extractedSkills || []
   };
   const rawRecommendedCareerName = currentInsight.recommendedCareer || currentInsight.recommended_career || analysis.recommendedCareer || analysis.recommended_career || '';
-  const recommendedCareerName = bestMatch.name || rawRecommendedCareerName || activeRole.name;
+  const recommendedCareerName = bestMatch.name || rawRecommendedCareerName || pendingAiRoleLabel;
   const careerMatchScore = bestMatch.matchScore ?? currentInsight.careerMatchScore ?? currentInsight.career_match_score ?? analysis.careerMatchScore ?? analysis.career_match_score ?? currentInsight.readinessScore ?? 0;
   const careerGapScore = bestMatch.gapScore ?? bestMatch.gap_score ?? Math.max(0, 100 - careerMatchScore);
   const recommendationSource = bestMatch.recommendationSource || currentInsight.recommendationSource || currentInsight.recommendation_source || analysis.recommendationSource || analysis.recommendation_source || '';
   const recommendationSourceLabel = getRecommendationSourceLabel(recommendationSource);
-  const rawAiRecommendationMatchesTop = rawRecommendedCareerName
-    ? rawRecommendedCareerName.toLowerCase() === recommendedCareerName.toLowerCase()
-    : true;
-  const topMatchSummary = rawAiRecommendationMatchesTop
-    ? currentInsight.summary
-    : `${recommendedCareerName} memiliki sinyal keterampilan paling kuat dari hasil analisis. ${rawRecommendedCareerName ? `${rawRecommendedCareerName} ikut terdeteksi, tetapi skornya lebih rendah.` : ''}`;
+  const scanJobMatches = (analysis.jobMatches || []).filter(hasActionableJobMatch);
+  const rawScanRecommendedCareerName = analysis.recommendedCareer || analysis.recommended_career || '';
+  const normalizedScanCareerName = rawScanRecommendedCareerName.toLowerCase();
+  const scanBestMatch = scanJobMatches.find((match) => (
+    (normalizedScanCareerName && String(match.name || '').toLowerCase() === normalizedScanCareerName)
+    || match.id === analysis.suggestedRoleId
+    || match.id === analysis.targetRoleId
+  )) || scanJobMatches[0] || {
+    id: analysis.suggestedRoleId || analysis.targetRoleId || targetRole,
+    name: analysis.targetRole || analysis.recommendedCareer || pendingAiRoleLabel,
+    matchScore: analysis.readinessScore || 0,
+    matchedSkills: analysis.extractedSkills || []
+  };
+  const scanRecommendedCareerName = rawScanRecommendedCareerName || scanBestMatch.name || pendingAiRoleLabel;
+  const scanCareerMatchScore = analysis.careerMatchScore ?? analysis.career_match_score ?? scanBestMatch.careerMatchScore ?? scanBestMatch.career_match_score ?? scanBestMatch.matchScore ?? analysis.readinessScore ?? 0;
+  const scanCareerGapScore = analysis.gapScore ?? analysis.gap_score ?? scanBestMatch.gapScore ?? scanBestMatch.gap_score ?? Math.max(0, 100 - scanCareerMatchScore);
+  const scanRecommendationSource = analysis.recommendationSource || analysis.recommendation_source || scanBestMatch.recommendationSource || '';
+  const scanRecommendationSourceLabel = getRecommendationSourceLabel(scanRecommendationSource);
+  const scanSummary = analysis.summary || scanBestMatch.summary || analysis.careerRecommendation?.summary || '';
   const activeCareerFitQuiz = careerFitQuiz?.questions?.length || careerFitQuiz?.options?.length ? careerFitQuiz : null;
   const activeCareerFitQuestions = getCareerFitQuestions(activeCareerFitQuiz);
   const answeredCount = activeCareerFitQuestions.filter((question, index) => (
@@ -641,13 +608,11 @@ function App() {
   const dashboardSignals = (
     currentInsight.marketSignals?.length
       ? currentInsight.marketSignals
-      : activeRole.marketSignals?.length
-        ? activeRole.marketSignals
-        : [...topGaps, ...topStrengths]
+      : [...topGaps, ...topStrengths]
   ).slice(0, 5);
   const dashboardTrackLabel = recommendationSource ? recommendationSourceLabel : (quizResult ? 'Jalur paling cocok' : 'Wawasan awal');
-  const dashboardDecisionTitle = finalResult?.recommendedRoleName || recommendedCareerName || quizResult?.selectedRoleName || careerRecommendation?.title || bestMatch.name || activeRole.name;
-  const dashboardDecisionCopy = finalResult?.summary || currentInsight.summary || quizResult?.recommendation || careerRecommendation?.summary || activeRole.businessGoal || analysis.businessGoal;
+  const dashboardDecisionTitle = finalResult?.recommendedRoleName || recommendedCareerName || quizResult?.selectedRoleName || careerRecommendation?.title || bestMatch.name || pendingAiRoleLabel;
+  const dashboardDecisionCopy = finalResult?.summary || currentInsight.summary || quizResult?.recommendation || careerRecommendation?.summary || analysis.businessGoal;
   const dashboardDecisionSupportCopy = quizResult
     ? (finalResult?.quizSummary || `Kuis singkat menguatkan arah ${quizResult.selectedRoleName || dashboardDecisionTitle} berdasarkan tipe pekerjaan yang kamu pilih.`)
     : 'Jawaban kuis singkat akan membantu memilih peran yang paling kamu minati dari daftar rekomendasi.';
@@ -769,6 +734,7 @@ function App() {
             email,
             password,
             options: {
+              emailRedirectTo: getAuthRedirectUrl(),
               data: {
                 full_name: authForm.name.trim() || email.split('@')[0]
               }
@@ -803,24 +769,6 @@ function App() {
     setCvHistory([]);
     goToPage('home', { force: true });
   };
-
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const rolesResponse = await fetchRoles();
-        const nextRoles = Array.isArray(rolesResponse.data.roles) ? rolesResponse.data.roles : [];
-        setRoles(nextRoles);
-        if (!nextRoles.length) {
-          setStatusMessage('Data peran belum tersedia. Analisis tetap bisa berjalan dengan pilihan bawaan.');
-        }
-      } catch (error) {
-        setRoles([]);
-        setStatusMessage(error.response?.data?.error || 'Gagal memuat data peran. Coba periksa koneksi lalu muat ulang halaman.');
-      }
-    };
-
-    loadInitialData();
-  }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {
@@ -925,7 +873,6 @@ function App() {
 
     setShowBiodataErrors(false);
     setIsBiodataSaved(true);
-    setTargetRole(inferTargetRoleIdFromProfile(biodata, roles, targetRole));
     await handleAnalyzeProfile(selectedCvFile);
   };
 
@@ -946,14 +893,11 @@ function App() {
 
     setIsUploading(true);
     setShowCvErrors(false);
-    clearStatusMessage();
+    setStatusMessage('Analisis sedang diproses. Mohon tunggu sebentar.');
 
     try {
       const profileText = formatBiodataText(biodata);
-      const inferredTargetRole = inferTargetRoleIdFromProfile(biodata, roles, targetRole);
-      const inferredRole = roles.find((role) => role.id === inferredTargetRole) || activeRole;
-      setTargetRole(inferredTargetRole);
-      const response = await uploadCv(file, inferredRole.domain || 'technology', inferredTargetRole, profileText, '');
+      const response = await uploadCv(file, 'technology', targetRole, profileText, '');
       const nextAnalysis = {
         ...response.data,
         jobMatches: (response.data.jobMatches || []).filter(hasActionableJobMatch)
@@ -972,7 +916,7 @@ function App() {
           extractedSkills: nextAnalysis.extractedSkills || [],
           skillDimiliki: nextAnalysis.skillDimiliki || [],
           skillGap: nextAnalysis.skillGap || [],
-          targetRole: nextAnalysis.suggestedRoleId || inferredTargetRole,
+          targetRole: nextAnalysis.suggestedRoleId || nextAnalysis.targetRoleId || targetRole,
           recommendedCareer: nextAnalysis.recommendedCareer,
           aiSource: nextAnalysis.aiSource
         });
@@ -1046,7 +990,7 @@ function App() {
     setShowCvErrors(false);
     setIsUploading(false);
     setIsSubmittingQuiz(false);
-    setTargetRole(defaultRole.id);
+    setTargetRole(defaultTargetRole);
     clearStatusMessage();
   };
 
@@ -1098,6 +1042,29 @@ function App() {
 
       setQuizResult(quizData);
       setTargetRole(selectedRoleId);
+      submitQuiz({
+        ...quizData,
+        answers: quizAnswers,
+        targetRole: selectedRoleId,
+        targetRoleName: selectedMatch.name || selectedCareerOption.label,
+        recommendedCareer: analysis.recommendedCareer,
+        jobMatches: adjustedJobMatches.slice(0, 5).map((match) => ({
+          id: match.id,
+          name: match.name,
+          matchScore: match.matchScore,
+          matchedSkills: match.matchedSkills || [],
+          missingSkills: match.missingSkills || [],
+          requiredSkills: match.requiredSkills || []
+        }))
+      })
+        .then(() => {
+          if (currentUser) {
+            loadProfileData();
+          }
+        })
+        .catch((historyError) => {
+          console.warn('Quiz history save failed:', historyError);
+        });
 
       const recommendationResponse = await createRecommendation({
         targetRole: selectedRoleId,
@@ -1134,7 +1101,7 @@ function App() {
       clearStatusMessage();
       goToPage('result', { force: true });
     } catch (error) {
-      setStatusMessage(error.message || 'Pengiriman kuis gagal. Silakan coba lagi.');
+      setStatusMessage(error.response?.data?.error || error.message || 'Pengiriman kuis gagal. Silakan coba lagi.');
     } finally {
       setIsSubmittingQuiz(false);
     }
@@ -1636,17 +1603,17 @@ function App() {
               </p>
 
               <div className="top-match-card">
-                <span>Rekomendasi utama berdasarkan kecocokan keterampilan</span>
-                <strong>{recommendedCareerName}</strong>
-                <p>{careerMatchScore}% kecocokan, kesenjangan {careerGapScore}%</p>
-                {recommendationSource && <small>{recommendationSourceLabel}</small>}
-                {(topMatchSummary || careerRecommendation?.summary) && (
-                  <p>{topMatchSummary || careerRecommendation?.summary}</p>
+                <span>Rekomendasi utama berdasarkan hasil analisis</span>
+                <strong>{scanRecommendedCareerName}</strong>
+                <p>{scanCareerMatchScore}% kecocokan, kesenjangan {scanCareerGapScore}%</p>
+                {scanRecommendationSource && <small>{scanRecommendationSourceLabel}</small>}
+                {scanSummary && (
+                  <p>{scanSummary}</p>
                 )}
               </div>
 
               <div className="match-list">
-                {jobMatches.map((match) => {
+                {scanJobMatches.map((match) => {
                   const matchedSkillBadges = getMatchedSkillBadges(match);
 
                   return (

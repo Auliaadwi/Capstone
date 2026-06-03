@@ -7,12 +7,9 @@ Dokumen ini merangkum alur aplikasi SkillMap berdasarkan implementasi frontend R
 ```mermaid
 flowchart TD
   A([Mulai]) --> B[Buka aplikasi web SkillMap]
-  B --> C[Frontend memuat data awal]
+  B --> C[Frontend siap menerima CV]
 
-  C --> C1[GET /api/roles]
-  C1 --> D[Pilih target role]
-
-  D --> E[Upload CV PDF]
+  C --> E[Upload CV PDF]
   E --> E0{Semua biodata terisi?}
   E0 -->|Tidak| H[Isi profil singkat tambahan]
   E0 -->|Ya| I1[POST /api/cvs]
@@ -24,12 +21,11 @@ flowchart TD
   I1 --> J[API validasi format PDF]
   J --> J1[Ekstrak PDF menjadi teks]
   J1 --> J2[Tampilkan teks PDF yang dibaca AI]
-  J2 --> K[Deteksi skill dari taxonomy]
-  K --> L[Bandingkan skill dengan target role]
-  L --> M[Hitung readiness score dan confidence]
-  M --> N[Buat skill gap, rekomendasi, dan roadmap]
-  N --> O[Simpan analisis CV]
-  O --> P[Tampilkan skill terdeteksi dan gap prioritas]
+  J2 --> K[Kirim teks CV ke AI Railway]
+  K --> L[AI Railway mengembalikan recommended career dan score]
+  L --> M[Normalisasi response untuk frontend]
+  M --> N[Simpan analisis CV]
+  N --> P[Tampilkan skill terdeteksi dan gap prioritas]
 
   P --> P1[Tampilkan rekomendasi pekerjaan berdasarkan persentase kecocokan]
   P1 --> Q[POST /api/career-fit-quizzes]
@@ -59,7 +55,6 @@ flowchart LR
   U[Pengguna] --> UI[React UI]
   UI --> APIClient[Axios API client]
 
-  APIClient --> Roles[GET /api/roles]
   APIClient --> CV[POST /api/cvs]
   APIClient --> Questions[GET /api/quiz-questions]
   APIClient --> CareerFit[POST /api/career-fit-quizzes]
@@ -69,7 +64,6 @@ flowchart LR
   APIClient --> Leads[POST /api/leads]
 
   subgraph FlaskAPI[Flask REST API]
-    Roles
     CV
     Questions
     CareerFit
@@ -132,7 +126,7 @@ flowchart LR
 
 | Tahap | Input | Proses | Output |
 | --- | --- | --- | --- |
-| Load awal | Halaman web dibuka | Ambil daftar role dari API | Data role |
+| Load awal | Halaman web dibuka | Siapkan state aplikasi dan sesi auth jika tersedia | Aplikasi siap menerima CV |
 | Profil singkat | Posisi yang dituju, skill/pengalaman tambahan, profil singkat | Validasi semua field wajib sebelum lanjut | Konteks pelengkap CV |
 | Analisis CV | File CV PDF, ringkasan profil, biodata, domain, target role | Validasi input wajib, validasi PDF, ekstraksi teks PDF, deteksi skill, mapping ke required skills | Teks PDF yang dibaca AI, extracted skills, skill gap, readiness score, job match percentage |
 | Mini quiz | Pilihan pengguna dari beberapa opsi role | Validasi kecenderungan karier dari job match | Role yang paling kuat dari CV dan minat pengguna |

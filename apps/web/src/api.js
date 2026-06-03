@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
-  timeout: 15000
+  timeout: 90000
 });
 
 let authToken = '';
@@ -21,14 +21,18 @@ export const setAuthToken = (token) => {
 export const fetchDashboard = () => api.get('/api/dashboard-snapshots/overview');
 export const fetchProfile = () => api.get('/api/profile');
 export const fetchCvHistory = () => api.get('/api/profile/cv-analyses');
-export const fetchRoles = () => api.get('/api/roles');
 export const fetchProjectRequirements = () => api.get('/api/project-requirements');
 export const fetchQuizQuestions = (domain = 'technology', targetRole = 'fullstack-web-developer') =>
   api.get(`/api/quiz-questions?domain=${encodeURIComponent(domain)}&targetRole=${encodeURIComponent(targetRole)}`);
 export const createCareerFitQuiz = (payload) => api.post('/api/career-fit-quizzes', payload);
 export const createFinalCareerResult = (payload) => api.post('/api/career-results', payload);
-export const submitQuiz = (answers, domain = 'technology', targetRole = 'fullstack-web-developer') =>
-  api.post('/api/quiz-attempts', { answers, domain, targetRole });
+export const submitQuiz = (payloadOrAnswers, domain = 'technology', targetRole = 'fullstack-web-developer') => {
+  const payload = Array.isArray(payloadOrAnswers)
+    ? { answers: payloadOrAnswers, domain, targetRole }
+    : payloadOrAnswers;
+
+  return api.post('/api/quiz-attempts', payload);
+};
 export const createRecommendation = (payload) => api.post('/api/recommendations', payload);
 
 export const uploadCv = async (file, domain = 'technology', targetRole = 'fullstack-web-developer', text = '', targetJob = '') => {

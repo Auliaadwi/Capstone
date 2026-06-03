@@ -72,7 +72,6 @@ The frontend expects the backend base URL from `VITE_API_URL` and calls these ma
 - `GET /health`
 - `GET /api/profile`
 - `GET /api/profile/cv-analyses`
-- `GET /api/roles`
 - `POST /api/cvs`
 - `POST /api/career-fit-quizzes`
 - `POST /api/career-results`
