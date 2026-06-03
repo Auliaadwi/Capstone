@@ -498,33 +498,11 @@ function getCareerReadinessLabel(score) {
   return 'masih rendah';
 }
 
-function formatSkillPreview(skills, fallback) {
-  if (!skills.length) {
-    return fallback;
-  }
-
-  if (skills.length <= 3) {
-    return skills.join(', ');
-  }
-
-  return `${skills.slice(0, 3).join(', ')}, dan ${skills.length - 3} skill lainnya`;
-}
-
 function getAlternativeCareerSummary(match = {}) {
   const score = clampPercentage(match.matchScore ?? match.score, 0);
-  const requiredSkills = getRequiredSkillBadges(match);
-  const matchedSkills = getMatchedSkillBadges(match);
-  const missingSkills = getMissingSkillBadges(match);
   const readinessLabel = getCareerReadinessLabel(score);
-  const skillText = requiredSkills.length
-    ? ` Skill yang harus dimiliki: ${formatSkillPreview(requiredSkills, '')}.`
-    : (missingSkills.length
-      ? ` Skill yang perlu ditingkatkan: ${formatSkillPreview(missingSkills, '')}.`
-      : (matchedSkills.length
-        ? ` Skill cocok dari CV: ${formatSkillPreview(matchedSkills, '')}.`
-        : ''));
 
-  return `Kamu memiliki kecocokan ${score}% (${readinessLabel}) untuk posisi ${match.name}.${skillText}`;
+  return `Kamu memiliki kecocokan ${score}% (${readinessLabel}) untuk posisi ${match.name}.`;
 }
 
 function withCourseUrl(course = {}) {
