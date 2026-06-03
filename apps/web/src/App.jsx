@@ -469,6 +469,22 @@ function getMissingSkillBadges(match = {}) {
     });
 }
 
+function getRequiredSkillBadges(match = {}) {
+  const skills = getArrayValue(match.requiredSkills, match.required_skills);
+  const seen = new Set();
+
+  return skills
+    .map((skill) => String(skill || '').trim())
+    .filter((skill) => {
+      const key = skill.toLowerCase();
+      if (!key || seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+}
+
 function getCareerReadinessLabel(score) {
   if (score >= 80) {
     return 'kuat';
@@ -496,17 +512,19 @@ function formatSkillPreview(skills, fallback) {
 
 function getAlternativeCareerSummary(match = {}) {
   const score = clampPercentage(match.matchScore ?? match.score, 0);
+  const requiredSkills = getRequiredSkillBadges(match);
   const matchedSkills = getMatchedSkillBadges(match);
   const missingSkills = getMissingSkillBadges(match);
   const readinessLabel = getCareerReadinessLabel(score);
-  const sourceLabel = match.recommendationSource ? getRecommendationSourceLabel(match.recommendationSource) : 'Analisis keterampilan dari CV';
-  const skillText = matchedSkills.length
-    ? ` Skill cocok: ${formatSkillPreview(matchedSkills, '')}.`
+  const skillText = requiredSkills.length
+    ? ` Skill yang harus dimiliki: ${formatSkillPreview(requiredSkills, '')}.`
     : (missingSkills.length
       ? ` Skill yang perlu ditingkatkan: ${formatSkillPreview(missingSkills, '')}.`
-      : '');
+      : (matchedSkills.length
+        ? ` Skill cocok dari CV: ${formatSkillPreview(matchedSkills, '')}.`
+        : ''));
 
-  return `Kamu memiliki kecocokan ${score}% (${readinessLabel}) untuk posisi ${match.name}. ${sourceLabel}.${skillText}`;
+  return `Kamu memiliki kecocokan ${score}% (${readinessLabel}) untuk posisi ${match.name}.${skillText}`;
 }
 
 function withCourseUrl(course = {}) {
@@ -1950,27 +1968,22 @@ function App() {
               </div>
               <div className="match-list">
                 {scanAlternativeCareerMatches.map((match) => {
+                  const requiredSkillBadges = getRequiredSkillBadges(match);
                   const matchedSkillBadges = getMatchedSkillBadges(match);
                   const missingSkillBadges = getMissingSkillBadges(match);
-                  const optionSource = match.recommendationSource ? getRecommendationSourceLabel(match.recommendationSource) : '';
+                  const displayedSkillBadges = requiredSkillBadges.length
+                    ? requiredSkillBadges
+                    : (missingSkillBadges.length ? missingSkillBadges : matchedSkillBadges);
 
                   return (
                     <div className="match-row" key={match.id || match.name}>
                       <div>
                         <strong>{match.name}</strong>
                         <p className="match-summary-copy">{getAlternativeCareerSummary(match)}</p>
-                        {optionSource && <small className="match-source-pill">{optionSource}</small>}
-                        {matchedSkillBadges.length > 0 && (
-                          <div className="match-skill-badges" aria-label={`Keterampilan cocok untuk ${match.name}`}>
-                            {matchedSkillBadges.map((skill) => (
-                              <span className="match-skill-badge" key={`${match.id || match.name}-${skill}`}>{skill}</span>
-                            ))}
-                          </div>
-                        )}
-                        {!matchedSkillBadges.length && missingSkillBadges.length > 0 && (
-                          <div className="match-skill-badges" aria-label={`Skill yang perlu ditingkatkan untuk ${match.name}`}>
-                            {missingSkillBadges.slice(0, 4).map((skill) => (
-                              <span className="match-skill-badge ghost" key={`${match.id || match.name}-${skill}`}>{skill}</span>
+                        {displayedSkillBadges.length > 0 && (
+                          <div className="match-skill-badges" aria-label={`Skill yang harus dimiliki untuk ${match.name}`}>
+                            {displayedSkillBadges.slice(0, 6).map((skill) => (
+                              <span className="match-skill-badge required" key={`${match.id || match.name}-${skill}`}>{skill}</span>
                             ))}
                           </div>
                         )}

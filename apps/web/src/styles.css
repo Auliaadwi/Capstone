@@ -1505,6 +1505,12 @@ a {
   color: #8b6426;
 }
 
+.match-row div:first-child .match-skill-badge.required {
+  border-color: rgba(36, 116, 85, 0.2);
+  background: rgba(134, 215, 169, 0.16);
+  color: #176442;
+}
+
 .match-score {
   display: grid;
   gap: 8px;
