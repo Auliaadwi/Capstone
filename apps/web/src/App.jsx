@@ -4,6 +4,7 @@ import {
   createFinalCareerResult,
   createRecommendation,
   fetchCvHistory,
+  fetchJobVacancies,
   fetchProfile,
   setAuthToken,
   submitQuiz,
@@ -259,6 +260,20 @@ function formatHistoryDate(value) {
     }).format(new Date(value));
   } catch {
     return value;
+  }
+}
+
+function formatJobDate(value) {
+  if (!value) {
+    return '';
+  }
+
+  try {
+    return new Intl.DateTimeFormat('id-ID', {
+      dateStyle: 'medium'
+    }).format(new Date(value));
+  } catch {
+    return '';
   }
 }
 
@@ -620,6 +635,9 @@ function App() {
   const [profileData, setProfileData] = useState(null);
   const [cvHistory, setCvHistory] = useState([]);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [jobVacancies, setJobVacancies] = useState([]);
+  const [isJobVacanciesLoading, setIsJobVacanciesLoading] = useState(false);
+  const [jobVacanciesMessage, setJobVacanciesMessage] = useState('');
 
   const currentUser = session?.user || null;
 
@@ -847,6 +865,30 @@ function App() {
     }
   };
 
+  const loadJobVacanciesForRole = async (roleName) => {
+    const normalizedRoleName = String(roleName || '').trim();
+    if (!normalizedRoleName) {
+      setJobVacancies([]);
+      setJobVacanciesMessage('');
+      return;
+    }
+
+    setIsJobVacanciesLoading(true);
+    setJobVacanciesMessage('');
+
+    try {
+      const response = await fetchJobVacancies(normalizedRoleName, '', 6);
+      const jobs = response.data.jobs || [];
+      setJobVacancies(jobs);
+      setJobVacanciesMessage(jobs.length ? '' : 'Belum ada loker remote yang cocok untuk rekomendasi ini.');
+    } catch (error) {
+      setJobVacancies([]);
+      setJobVacanciesMessage(error.response?.data?.error || 'Info loker belum bisa dimuat saat ini.');
+    } finally {
+      setIsJobVacanciesLoading(false);
+    }
+  };
+
   const handleAuthFieldChange = (field, value) => {
     setAuthForm((current) => ({ ...current, [field]: value }));
     setAuthMessage('');
@@ -993,6 +1035,8 @@ function App() {
     setRecommendation(null);
     setQuizResult(null);
     setFinalResult(null);
+    setJobVacancies([]);
+    setJobVacanciesMessage('');
     setMiniQuizAnswer({});
     clearQuizStatusMessage();
     clearStatusMessage();
@@ -1054,6 +1098,8 @@ function App() {
       setRecommendation(null);
       setQuizResult(null);
       setFinalResult(null);
+      setJobVacancies([]);
+      setJobVacanciesMessage('');
       setMiniQuizAnswer({});
       let nextCareerFitQuiz = null;
       let nextQuizStatusMessage = '';
@@ -1112,6 +1158,8 @@ function App() {
       setRecommendation(null);
       setQuizResult(null);
       setFinalResult(null);
+      setJobVacancies([]);
+      setJobVacanciesMessage('');
       setMiniQuizAnswer({});
       setCareerFitQuiz(null);
       clearQuizStatusMessage();
@@ -1134,6 +1182,9 @@ function App() {
     setQuizResult(null);
     setFinalResult(null);
     setRecommendation(null);
+    setJobVacancies([]);
+    setJobVacanciesMessage('');
+    setIsJobVacanciesLoading(false);
     setExtractedCvText('');
     setSelectedCvFile(null);
     setShowBiodataErrors(false);
@@ -1249,6 +1300,7 @@ function App() {
       }
     });
     setFinalResult(finalResponse.data);
+    loadJobVacanciesForRole(finalResponse.data?.recommendedRoleName || finalSelectedRoleName);
     clearStatusMessage();
     goToPage('result', { force: true });
   };
@@ -2009,6 +2061,60 @@ function App() {
                   </p>
                 </section>
               </div>
+
+              <section className="result-summary-block job-vacancy-block">
+                <div className="job-vacancy-heading">
+                  <div>
+                    <span>Info loker terkait</span>
+                    <strong>{finalResult?.recommendedRoleName || recommendedCareerName || 'Rekomendasi akhir'}</strong>
+                  </div>
+                  <small>{isJobVacanciesLoading ? 'Memuat...' : `${jobVacancies.length} loker`}</small>
+                </div>
+
+                {jobVacancies.length > 0 && (
+                  <div className="job-vacancy-list">
+                    {jobVacancies.map((job) => {
+                      const postedDate = formatJobDate(job.postedAt);
+
+                      return (
+                        <article className="job-vacancy-card" key={job.id || job.url || `${job.title}-${job.company}`}>
+                          <div>
+                            <span>{job.source || 'Job board'}</span>
+                            <strong>{job.title}</strong>
+                            <p>{job.company} - {job.location || 'Remote'}</p>
+                          </div>
+                          <div className="job-vacancy-meta">
+                            {job.type && <small>{job.type}</small>}
+                            {job.level && <small>{job.level}</small>}
+                            {postedDate && <small>{postedDate}</small>}
+                            {job.salary && <small>{job.salary}</small>}
+                          </div>
+                          {job.excerpt && <p>{job.excerpt}</p>}
+                          {job.url && (
+                            <a
+                              className="job-vacancy-link"
+                              href={job.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(event) => openCourse(event, job.url)}
+                            >
+                              Buka lowongan
+                            </a>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {!jobVacancies.length && (
+                  <p className="job-vacancy-empty">
+                    {isJobVacanciesLoading
+                      ? 'Sedang mencari loker remote yang sesuai dengan rekomendasi akhir.'
+                      : (jobVacanciesMessage || 'Info loker akan muncul setelah hasil akhir tersedia.')}
+                  </p>
+                )}
+              </section>
 
               <div className="result-summary-block">
                 <span>Fokus rencana belajar</span>

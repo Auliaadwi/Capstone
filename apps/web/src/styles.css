@@ -1856,6 +1856,134 @@ a {
   margin-top: 14px;
 }
 
+.job-vacancy-block {
+  margin-top: 14px;
+}
+
+.job-vacancy-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.job-vacancy-heading div {
+  display: grid;
+  gap: 6px;
+}
+
+.job-vacancy-heading strong {
+  color: #10201e;
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.job-vacancy-heading small {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid rgba(36, 116, 85, 0.16);
+  border-radius: 999px;
+  background: rgba(134, 215, 169, 0.16);
+  color: #247455;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.job-vacancy-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.job-vacancy-card {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.job-vacancy-card span {
+  display: block;
+  color: #247455;
+  font-size: 0.68rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.job-vacancy-card strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink);
+  font-weight: 950;
+  line-height: 1.28;
+}
+
+.job-vacancy-card p {
+  margin: 0;
+  color: #40564e;
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.job-vacancy-card div > p {
+  margin-top: 6px;
+}
+
+.job-vacancy-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.job-vacancy-meta small {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  padding: 0 9px;
+  border: 1px solid rgba(142, 215, 223, 0.2);
+  border-radius: 999px;
+  background: rgba(142, 215, 223, 0.12);
+  color: #245f66;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.job-vacancy-link {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: var(--warm);
+  color: #16130e;
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.job-vacancy-link:hover {
+  background: var(--accent);
+  color: #10201e;
+}
+
+.job-vacancy-empty {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
 .role-summary {
   margin: 22px 0;
 }
@@ -3074,7 +3202,8 @@ a {
   .coverage-grid,
   .activity-summary div,
   .human-result-grid,
-  .result-summary-grid {
+  .result-summary-grid,
+  .job-vacancy-list {
     grid-template-columns: 1fr;
   }
 

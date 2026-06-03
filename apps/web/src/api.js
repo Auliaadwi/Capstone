@@ -22,6 +22,8 @@ export const fetchDashboard = () => api.get('/api/dashboard-snapshots/overview')
 export const fetchProfile = () => api.get('/api/profile');
 export const fetchCvHistory = () => api.get('/api/profile/cv-analyses');
 export const fetchProjectRequirements = () => api.get('/api/project-requirements');
+export const fetchJobVacancies = (role, location = '', limit = 6) =>
+  api.get(`/api/job-vacancies?role=${encodeURIComponent(role)}&location=${encodeURIComponent(location)}&limit=${encodeURIComponent(limit)}`);
 export const fetchQuizQuestions = (domain = 'technology', targetRole = 'fullstack-web-developer') =>
   api.get(`/api/quiz-questions?domain=${encodeURIComponent(domain)}&targetRole=${encodeURIComponent(targetRole)}`);
 export const createCareerFitQuiz = (payload) => api.post('/api/career-fit-quizzes', payload);
