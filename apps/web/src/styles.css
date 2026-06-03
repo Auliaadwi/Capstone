@@ -1670,6 +1670,13 @@ a {
   flex: 1 1 220px;
 }
 
+.quiz-status-note {
+  margin: 12px 0 0 !important;
+  color: #6f6252 !important;
+  font-size: 0.84rem !important;
+  text-align: center;
+}
+
 .progress-track {
   height: 9px;
   overflow: hidden;

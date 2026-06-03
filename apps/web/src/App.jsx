@@ -237,11 +237,11 @@ function formatBiodataText(biodata) {
 function getRecommendationSourceLabel(source) {
   const labels = {
     user_input: 'Target pilihan pengguna',
-    rule_based: 'Pencocokan kata kunci dan keterampilan',
-    hybrid: 'Aturan lokal + model AI',
+    rule_based: 'Analisis keterampilan dari CV',
+    hybrid: 'Analisis model dan keterampilan',
     model: 'Model AI',
-    local_rules: 'Analisis lokal berbasis aturan',
-    external: 'Model AI SkillMap'
+    local_rules: 'Analisis keterampilan',
+    external: 'Analisis SkillMap'
   };
 
   return labels[source] || 'AI SkillMap';
@@ -513,6 +513,7 @@ function App() {
   const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
   const [currentPage, setCurrentPage] = useState(getPageFromHash);
   const [statusMessage, setStatusMessage] = useState('');
+  const [quizStatusMessage, setQuizStatusMessage] = useState('');
   const [session, setSession] = useState(null);
   const [authMode, setAuthMode] = useState('sign-in');
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
@@ -646,6 +647,7 @@ function App() {
 
   const getPageBlockMessage = (pageId) => getPageBlockMessageForState(pageId, navigationGuard);
   const clearStatusMessage = () => setStatusMessage('');
+  const clearQuizStatusMessage = () => setQuizStatusMessage('');
 
   const goToPage = (pageId, options = {}) => {
     if (!options.force) {
@@ -853,6 +855,7 @@ function App() {
     setQuizResult(null);
     setFinalResult(null);
     setMiniQuizAnswer({});
+    clearQuizStatusMessage();
     clearStatusMessage();
   };
 
@@ -894,6 +897,7 @@ function App() {
     setIsUploading(true);
     setShowCvErrors(false);
     setStatusMessage('Analisis sedang diproses. Mohon tunggu sebentar.');
+    clearQuizStatusMessage();
 
     try {
       const profileText = formatBiodataText(biodata);
@@ -909,7 +913,7 @@ function App() {
       setFinalResult(null);
       setMiniQuizAnswer({});
       let nextCareerFitQuiz = null;
-      let nextStatusMessage = '';
+      let nextQuizStatusMessage = '';
       try {
         const quizResponse = await createCareerFitQuiz({
           jobMatches: nextAnalysis.jobMatches || [],
@@ -923,12 +927,13 @@ function App() {
         const backendQuiz = quizResponse.data.question || null;
         nextCareerFitQuiz = getCareerFitQuestions(backendQuiz).length ? backendQuiz : null;
         if (!nextCareerFitQuiz) {
-          nextStatusMessage = 'Analisis CV berhasil, tetapi pertanyaan kuis belum tersedia.';
+          nextQuizStatusMessage = 'Kuis singkat belum tersedia untuk hasil ini. Coba lagi beberapa saat lagi.';
         }
       } catch (quizError) {
-        nextStatusMessage = quizError.response?.data?.error || 'Analisis CV berhasil, tetapi kuis singkat belum bisa dibuat.';
+        nextQuizStatusMessage = quizError.response?.data?.error || 'Kuis singkat belum bisa dibuat saat ini.';
       }
       setCareerFitQuiz(nextCareerFitQuiz);
+      setQuizStatusMessage(nextQuizStatusMessage);
       setHasScannedCv(true);
       if (currentUser) {
         loadProfileData();
@@ -937,11 +942,7 @@ function App() {
         setTargetRole(response.data.suggestedRoleId);
       }
       goToPage('matches', { force: true });
-      if (nextStatusMessage) {
-        setStatusMessage(nextStatusMessage);
-      } else {
-        clearStatusMessage();
-      }
+      clearStatusMessage();
     } catch (error) {
       setStatusMessage(error.response?.data?.error || error.message || 'Analisis CV gagal. Silakan coba lagi.');
     } finally {
@@ -966,6 +967,7 @@ function App() {
       setFinalResult(null);
       setMiniQuizAnswer({});
       setCareerFitQuiz(null);
+      clearQuizStatusMessage();
       setExtractedCvText('');
       setShowCvErrors(false);
       clearStatusMessage();
@@ -980,6 +982,7 @@ function App() {
     setHasScannedCv(false);
     setMiniQuizAnswer({});
     setCareerFitQuiz(null);
+    clearQuizStatusMessage();
     setAnalysis(emptyAnalysis);
     setQuizResult(null);
     setFinalResult(null);
@@ -1653,6 +1656,9 @@ function App() {
                   Lanjut Kuis Singkat
                 </button>
               </div>
+              {quizStatusMessage && (
+                <p className="quiz-status-note">{quizStatusMessage}</p>
+              )}
             </article>
 
             <article className="workspace-panel quiz-panel">
