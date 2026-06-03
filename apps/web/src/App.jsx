@@ -505,6 +505,38 @@ function getAlternativeCareerSummary(match = {}) {
   return `Kamu memiliki kecocokan ${score}% (${readinessLabel}) untuk posisi ${match.name}.`;
 }
 
+function getInsightSkills(insight = {}) {
+  return getArrayValue(insight.skillDimiliki, insight.skill_dimiliki, insight.extractedSkills);
+}
+
+function getInsightGaps(insight = {}) {
+  return getArrayValue(insight.skillGap, insight.skill_gap);
+}
+
+function getInsightCourses(insight = {}) {
+  return getArrayValue(insight.courseRecommendations, insight.course_recommendations).map(withCourseUrl);
+}
+
+function getInsightRoadmap(insight = {}) {
+  return getArrayValue(insight.roadmap, insight.learningPath, insight.learning_path);
+}
+
+function getRoadmapStepText(step) {
+  if (typeof step === 'string') {
+    return step;
+  }
+
+  if (!step || typeof step !== 'object') {
+    return 'Langkah belajar belum tersedia.';
+  }
+
+  return step.action || step.reason || step.skill || step.focus || 'Langkah belajar belum tersedia.';
+}
+
+function getHistoryItemKey(item = {}) {
+  return String(item.id || `${item.fileName || 'cv'}-${item.createdAt || 'history'}`);
+}
+
 function withCourseUrl(course = {}) {
   return {
     ...course,
@@ -687,6 +719,7 @@ function App() {
   const [profileData, setProfileData] = useState(null);
   const [cvHistory, setCvHistory] = useState([]);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [selectedHistoryId, setSelectedHistoryId] = useState('');
   const [jobVacancies, setJobVacancies] = useState([]);
   const [isJobVacanciesLoading, setIsJobVacanciesLoading] = useState(false);
   const [jobVacanciesMessage, setJobVacanciesMessage] = useState('');
@@ -1668,27 +1701,155 @@ function App() {
                   <div className="history-list">
                     {cvHistory.map((item) => {
                       const scanAnalysis = item.analysis || {};
-                      const scanMatch = scanAnalysis.jobMatches?.[0] || {};
-                      const scanScore = scanAnalysis.readinessScore || scanMatch.matchScore || 0;
-                      const scanRole = scanAnalysis.targetRole || scanMatch.name || 'Peran belum tersedia';
-                      const scanSkills = (scanAnalysis.extractedSkills || []).slice(0, 4);
+                      const scanJobMatches = mergeJobMatchLists(
+                        scanAnalysis.jobMatches || [],
+                        getCareerRecommendationMatches(scanAnalysis)
+                      ).filter(hasActionableJobMatch);
+                      const scanMatch = scanJobMatches[0] || {};
+                      const scanScore = clampPercentage(
+                        scanAnalysis.careerMatchScore
+                          ?? scanAnalysis.career_match_score
+                          ?? scanAnalysis.readinessScore
+                          ?? scanMatch.matchScore,
+                        0
+                      );
+                      const scanGapScore = clampPercentage(
+                        scanAnalysis.gapScore
+                          ?? scanAnalysis.gap_score
+                          ?? scanMatch.gapScore
+                          ?? Math.max(0, 100 - scanScore),
+                        Math.max(0, 100 - scanScore)
+                      );
+                      const scanRole = scanAnalysis.recommendedCareer || scanAnalysis.targetRole || scanAnalysis.recommended_career || scanMatch.name || 'Peran belum tersedia';
+                      const scanSkills = getInsightSkills(scanAnalysis);
+                      const scanGaps = getInsightGaps(scanAnalysis);
+                      const scanCourses = getInsightCourses(scanAnalysis);
+                      const scanRoadmap = getInsightRoadmap(scanAnalysis);
+                      const scanSummary = scanAnalysis.summary || scanAnalysis.careerRecommendation?.summary || `Kamu memiliki kecocokan ${scanScore}% untuk posisi ${scanRole}.`;
+                      const scanAlternativeMatches = scanJobMatches
+                        .filter((match) => String(match.name || '').toLowerCase() !== String(scanRole || '').toLowerCase())
+                        .slice(0, 3);
+                      const historyKey = getHistoryItemKey(item);
+                      const isHistoryOpen = selectedHistoryId === historyKey;
 
                       return (
-                        <article className="history-card" key={item.id || `${item.fileName}-${item.createdAt}`}>
-                          <div>
-                            <span>{formatHistoryDate(item.createdAt)}</span>
-                            <strong>{item.fileName}</strong>
-                            <p>{scanRole}</p>
-                          </div>
-                          <div className="history-score">
-                            <strong>{scanScore}%</strong>
-                            <span>cocok</span>
-                          </div>
+                        <article className={`history-card ${isHistoryOpen ? 'open' : ''}`} key={historyKey}>
+                          <button
+                            className="history-card-main"
+                            type="button"
+                            aria-expanded={isHistoryOpen}
+                            onClick={() => setSelectedHistoryId(isHistoryOpen ? '' : historyKey)}
+                          >
+                            <div>
+                              <span>{formatHistoryDate(item.createdAt)}</span>
+                              <strong>{item.fileName}</strong>
+                              <p>{scanRole}</p>
+                            </div>
+                            <div className="history-score">
+                              <strong>{scanScore}%</strong>
+                              <span>cocok</span>
+                              <small>{isHistoryOpen ? 'Tutup detail' : 'Buka detail'}</small>
+                            </div>
+                          </button>
                           <div className="chip-row">
-                            {scanSkills.length
-                              ? scanSkills.map((skill) => <span className="chip" key={skill}>{skill}</span>)
+                            {scanSkills.slice(0, 4).length
+                              ? scanSkills.slice(0, 4).map((skill) => <span className="chip" key={skill}>{skill}</span>)
                               : <span className="chip ghost">Keterampilan belum tersedia</span>}
                           </div>
+
+                          {isHistoryOpen && (
+                            <div className="history-detail">
+                              <div className="final-result-card history-final-card">
+                                <span>Rekomendasi karier dari scan CV</span>
+                                <strong>{scanRole}</strong>
+                                <p>{scanSummary}</p>
+                              </div>
+
+                              <div className="result-summary-grid history-result-grid">
+                                <section className="result-summary-block">
+                                  <span>Ringkasan CV</span>
+                                  <p>{scanSkills.length ? `Keterampilan terdeteksi: ${scanSkills.slice(0, 6).join(', ')}.` : 'Belum ada keterampilan spesifik yang tersimpan dari hasil scan ini.'}</p>
+                                </section>
+                                <section className="result-summary-block">
+                                  <span>Saran pekerjaan</span>
+                                  <p>{`${scanRole} muncul dengan kecocokan ${scanScore}% dan kesenjangan ${scanGapScore}%.`}</p>
+                                </section>
+                                <section className="result-summary-block">
+                                  <span>Fokus belajar</span>
+                                  <p>{scanGaps.length ? `Prioritas awal: ${scanGaps.slice(0, 4).join(', ')}.` : 'Belum ada gap prioritas yang tersimpan dari hasil scan ini.'}</p>
+                                </section>
+                              </div>
+
+                              <div className="history-detail-grid">
+                                <section className="result-summary-block">
+                                  <span>Yang sudah kuat</span>
+                                  <div className="chip-row">
+                                    {scanSkills.length
+                                      ? scanSkills.slice(0, 8).map((skill) => <span className="chip" key={`${historyKey}-skill-${skill}`}>{skill}</span>)
+                                      : <span className="chip ghost">Belum ada skill tersimpan</span>}
+                                  </div>
+                                </section>
+                                <section className="result-summary-block">
+                                  <span>Yang perlu dikejar</span>
+                                  <div className="chip-row">
+                                    {scanGaps.length
+                                      ? scanGaps.slice(0, 8).map((gap) => <span className="chip ghost" key={`${historyKey}-gap-${gap}`}>{gap}</span>)
+                                    : <span className="chip ghost">Tidak ada gap prioritas</span>}
+                                  </div>
+                                </section>
+                              </div>
+
+                              {scanAlternativeMatches.length > 0 && (
+                                <section className="result-summary-block">
+                                  <span>Opsi karier relevan lainnya</span>
+                                  <div className="history-match-list">
+                                    {scanAlternativeMatches.map((match) => (
+                                      <article className="history-match-item" key={`${historyKey}-${match.id || match.name}`}>
+                                        <div>
+                                          <strong>{match.name}</strong>
+                                          <p>{getAlternativeCareerSummary(match)}</p>
+                                        </div>
+                                        <span>{clampPercentage(match.matchScore ?? match.score, 0)}%</span>
+                                      </article>
+                                    ))}
+                                  </div>
+                                </section>
+                              )}
+
+                              <section className="result-summary-block history-course-block">
+                                <span>Rekomendasi course</span>
+                                {scanCourses.length ? (
+                                  <div className="course-list result-course-list">
+                                    {scanCourses.slice(0, 4).map((course) => (
+                                      <CourseItem course={course} key={`${historyKey}-${course.skill}-${course.title}`} />
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p>Course belum tersedia untuk hasil scan ini.</p>
+                                )}
+                              </section>
+
+                              <section className="result-summary-block">
+                                <span>Roadmap belajar</span>
+                                {scanRoadmap.length ? (
+                                  <div className="roadmap-list history-roadmap-list">
+                                    {scanRoadmap.slice(0, 5).map((step, index) => (
+                                      <div className="roadmap-step" key={step.id || step.title || step.action || `${historyKey}-roadmap-${index}`}>
+                                        <span>{String(index + 1).padStart(2, '0')}</span>
+                                        <div>
+                                          <strong>{step.title || `Langkah ${index + 1}`}</strong>
+                                          {step.duration && <small>{step.duration}</small>}
+                                          <p>{getRoadmapStepText(step)}</p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p>Roadmap belum tersedia untuk hasil scan ini.</p>
+                                )}
+                              </section>
+                            </div>
+                          )}
                         </article>
                       );
                     })}
