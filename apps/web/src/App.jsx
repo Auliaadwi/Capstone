@@ -453,6 +453,62 @@ function getMatchedSkillBadges(match = {}) {
     });
 }
 
+function getMissingSkillBadges(match = {}) {
+  const skills = getArrayValue(match.missingSkills, match.missing_skills, match.skillGap, match.skill_gap);
+  const seen = new Set();
+
+  return skills
+    .map((skill) => String(skill || '').trim())
+    .filter((skill) => {
+      const key = skill.toLowerCase();
+      if (!key || seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+}
+
+function getCareerReadinessLabel(score) {
+  if (score >= 80) {
+    return 'kuat';
+  }
+  if (score >= 60) {
+    return 'cukup siap';
+  }
+  if (score >= 40) {
+    return 'perlu diperkuat';
+  }
+  return 'masih rendah';
+}
+
+function formatSkillPreview(skills, fallback) {
+  if (!skills.length) {
+    return fallback;
+  }
+
+  if (skills.length <= 3) {
+    return skills.join(', ');
+  }
+
+  return `${skills.slice(0, 3).join(', ')}, dan ${skills.length - 3} skill lainnya`;
+}
+
+function getAlternativeCareerSummary(match = {}) {
+  const score = clampPercentage(match.matchScore ?? match.score, 0);
+  const matchedSkills = getMatchedSkillBadges(match);
+  const missingSkills = getMissingSkillBadges(match);
+  const readinessLabel = getCareerReadinessLabel(score);
+  const sourceLabel = match.recommendationSource ? getRecommendationSourceLabel(match.recommendationSource) : 'Analisis keterampilan dari CV';
+  const skillText = matchedSkills.length
+    ? ` Skill cocok: ${formatSkillPreview(matchedSkills, '')}.`
+    : (missingSkills.length
+      ? ` Skill yang perlu ditingkatkan: ${formatSkillPreview(missingSkills, '')}.`
+      : '');
+
+  return `Kamu memiliki kecocokan ${score}% (${readinessLabel}) untuk posisi ${match.name}. ${sourceLabel}.${skillText}`;
+}
+
 function withCourseUrl(course = {}) {
   return {
     ...course,
@@ -1895,22 +1951,26 @@ function App() {
               <div className="match-list">
                 {scanAlternativeCareerMatches.map((match) => {
                   const matchedSkillBadges = getMatchedSkillBadges(match);
+                  const missingSkillBadges = getMissingSkillBadges(match);
                   const optionSource = match.recommendationSource ? getRecommendationSourceLabel(match.recommendationSource) : '';
 
                   return (
                     <div className="match-row" key={match.id || match.name}>
                       <div>
                         <strong>{match.name}</strong>
-                        <span>
-                          {matchedSkillBadges.length
-                            ? `${matchedSkillBadges.length} keterampilan cocok`
-                            : 'Opsi dari daftar career_recommendations AI'}
-                        </span>
+                        <p className="match-summary-copy">{getAlternativeCareerSummary(match)}</p>
                         {optionSource && <small className="match-source-pill">{optionSource}</small>}
                         {matchedSkillBadges.length > 0 && (
                           <div className="match-skill-badges" aria-label={`Keterampilan cocok untuk ${match.name}`}>
                             {matchedSkillBadges.map((skill) => (
                               <span className="match-skill-badge" key={`${match.id || match.name}-${skill}`}>{skill}</span>
+                            ))}
+                          </div>
+                        )}
+                        {!matchedSkillBadges.length && missingSkillBadges.length > 0 && (
+                          <div className="match-skill-badges" aria-label={`Skill yang perlu ditingkatkan untuk ${match.name}`}>
+                            {missingSkillBadges.slice(0, 4).map((skill) => (
+                              <span className="match-skill-badge ghost" key={`${match.id || match.name}-${skill}`}>{skill}</span>
                             ))}
                           </div>
                         )}
