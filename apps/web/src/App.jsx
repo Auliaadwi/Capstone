@@ -334,6 +334,95 @@ function hasActionableJobMatch(match = {}) {
   return score > 0 || matchedSkillCount > 0;
 }
 
+function formatCareerName(value) {
+  const text = String(value || '').trim().replace(/[-_]+/g, ' ');
+  const acronymWords = new Set(['ai', 'api', 'hr', 'it', 'ml', 'qa', 'seo', 'sql', 'ui', 'ux']);
+
+  return text
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => (acronymWords.has(part.toLowerCase()) ? part.toUpperCase() : `${part.charAt(0).toUpperCase()}${part.slice(1)}`))
+    .join(' ');
+}
+
+function createCareerId(value, fallback) {
+  const id = String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return id || fallback;
+}
+
+function getArrayValue(...values) {
+  return values.find((value) => Array.isArray(value)) || [];
+}
+
+function getCareerRecommendationMatches(source = {}) {
+  const rawRecommendations = getArrayValue(source.careerRecommendations, source.career_recommendations);
+
+  return rawRecommendations
+    .map((item, index) => {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+
+      const rawName = item.name || item.roleName || item.role || item.career || item.recommendedCareer || item.recommended_career;
+      const name = formatCareerName(rawName || `Rekomendasi ${index + 1}`);
+      const score = clampPercentage(
+        item.matchScore ?? item.match_score ?? item.careerMatchScore ?? item.career_match_score ?? item.score,
+        0
+      );
+
+      return {
+        ...item,
+        id: item.id || item.roleId || createCareerId(rawName, `career-recommendation-${index + 1}`),
+        name,
+        matchScore: score,
+        matchedSkills: getArrayValue(item.matchedSkills, item.matched_skills, item.skillDimiliki, item.skill_dimiliki),
+        missingSkills: getArrayValue(item.missingSkills, item.missing_skills, item.skillGap, item.skill_gap),
+        requiredSkills: getArrayValue(item.requiredSkills, item.required_skills),
+        recommendationSource: item.recommendationSource || item.recommendation_source || item.source,
+        fromCareerRecommendations: true
+      };
+    })
+    .filter(Boolean);
+}
+
+function mergeJobMatchLists(...lists) {
+  const merged = [];
+  const seen = new Set();
+
+  lists.flat().forEach((match) => {
+    if (!match || typeof match !== 'object') {
+      return;
+    }
+
+    const name = match.name || match.roleName || match.role || match.career || match.recommendedCareer || match.recommended_career;
+    const normalizedName = formatCareerName(name);
+    const normalizedMatch = {
+      ...match,
+      id: match.id || match.roleId || createCareerId(normalizedName, `career-option-${merged.length + 1}`),
+      name: normalizedName || pendingAiRoleLabel,
+      matchScore: clampPercentage(
+        match.matchScore ?? match.match_score ?? match.careerMatchScore ?? match.career_match_score ?? match.score,
+        0
+      )
+    };
+    const key = `${normalizedMatch.id || ''}:${normalizedMatch.name}`.toLowerCase();
+
+    if (seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    merged.push(normalizedMatch);
+  });
+
+  return merged;
+}
+
 function getMatchedSkillBadges(match = {}) {
   const skills = Array.isArray(match.matchedSkills) ? match.matchedSkills : [];
   const seen = new Set();
@@ -554,7 +643,12 @@ function App() {
     [biodata, requiredBiodataFields]
   );
   const biodataProgress = Math.round((biodataFilledCount / requiredBiodataFields.length) * 100);
-  const rawJobMatches = recommendation?.jobMatches || analysis.jobMatches || [];
+  const rawJobMatches = mergeJobMatchLists(
+    currentInsight.jobMatches || [],
+    getCareerRecommendationMatches(currentInsight),
+    analysis.jobMatches || [],
+    getCareerRecommendationMatches(analysis)
+  );
   const jobMatches = rawJobMatches.filter(hasActionableJobMatch);
   const shouldSkipCareerFitQuiz = hasScannedCv && jobMatches.length === 1;
   const hasSkippedCareerFitQuiz = Boolean(quizResult?.skipped);
@@ -570,7 +664,10 @@ function App() {
   const careerGapScore = bestMatch.gapScore ?? bestMatch.gap_score ?? Math.max(0, 100 - careerMatchScore);
   const recommendationSource = bestMatch.recommendationSource || currentInsight.recommendationSource || currentInsight.recommendation_source || analysis.recommendationSource || analysis.recommendation_source || '';
   const recommendationSourceLabel = getRecommendationSourceLabel(recommendationSource);
-  const scanJobMatches = (analysis.jobMatches || []).filter(hasActionableJobMatch);
+  const scanJobMatches = mergeJobMatchLists(
+    analysis.jobMatches || [],
+    getCareerRecommendationMatches(analysis)
+  ).filter(hasActionableJobMatch);
   const rawScanRecommendedCareerName = analysis.recommendedCareer || analysis.recommended_career || '';
   const normalizedScanCareerName = rawScanRecommendedCareerName.toLowerCase();
   const scanBestMatch = scanJobMatches.find((match) => (
@@ -589,6 +686,16 @@ function App() {
   const scanRecommendationSource = analysis.recommendationSource || analysis.recommendation_source || scanBestMatch.recommendationSource || '';
   const scanRecommendationSourceLabel = getRecommendationSourceLabel(scanRecommendationSource);
   const scanSummary = analysis.summary || scanBestMatch.summary || analysis.careerRecommendation?.summary || '';
+  const scanAlternativeCareerMatches = scanJobMatches.filter((match) => {
+    const matchName = String(match.name || '').toLowerCase();
+    const matchId = String(match.id || '').toLowerCase();
+    return (
+      matchId !== String(scanBestMatch.id || '').toLowerCase()
+      && matchId !== String(analysis.suggestedRoleId || '').toLowerCase()
+      && matchName !== normalizedScanCareerName
+      && matchName !== String(scanRecommendedCareerName || '').toLowerCase()
+    );
+  });
   const activeCareerFitQuiz = careerFitQuiz?.questions?.length || careerFitQuiz?.options?.length ? careerFitQuiz : null;
   const activeCareerFitQuestions = getCareerFitQuestions(activeCareerFitQuiz);
   const answeredCount = activeCareerFitQuestions.filter((question, index) => (
@@ -934,9 +1041,13 @@ function App() {
     try {
       const profileText = formatBiodataText(biodata);
       const response = await uploadCv(file, 'technology', targetRole, profileText, '');
+      const nextAnalysisJobMatches = mergeJobMatchLists(
+        response.data.jobMatches || [],
+        getCareerRecommendationMatches(response.data)
+      ).filter(hasActionableJobMatch);
       const nextAnalysis = {
         ...response.data,
-        jobMatches: (response.data.jobMatches || []).filter(hasActionableJobMatch)
+        jobMatches: nextAnalysisJobMatches
       };
       setAnalysis(nextAnalysis);
       setExtractedCvText(response.data.extractedCvText || '');
@@ -1725,15 +1836,25 @@ function App() {
                 )}
               </div>
 
+              <div className="career-options-heading">
+                <span>Opsi karier relevan lainnya</span>
+                <strong>{scanAlternativeCareerMatches.length} opsi</strong>
+              </div>
               <div className="match-list">
-                {scanJobMatches.map((match) => {
+                {scanAlternativeCareerMatches.map((match) => {
                   const matchedSkillBadges = getMatchedSkillBadges(match);
+                  const optionSource = match.recommendationSource ? getRecommendationSourceLabel(match.recommendationSource) : '';
 
                   return (
                     <div className="match-row" key={match.id || match.name}>
                       <div>
                         <strong>{match.name}</strong>
-                        <span>{matchedSkillBadges.length} keterampilan cocok</span>
+                        <span>
+                          {matchedSkillBadges.length
+                            ? `${matchedSkillBadges.length} keterampilan cocok`
+                            : 'Opsi dari daftar career_recommendations AI'}
+                        </span>
+                        {optionSource && <small className="match-source-pill">{optionSource}</small>}
                         {matchedSkillBadges.length > 0 && (
                           <div className="match-skill-badges" aria-label={`Keterampilan cocok untuk ${match.name}`}>
                             {matchedSkillBadges.map((skill) => (
@@ -1751,6 +1872,13 @@ function App() {
                     </div>
                   );
                 })}
+                {!scanAlternativeCareerMatches.length && (
+                  <p className="career-options-empty">
+                    {hasScannedCv
+                      ? 'Belum ada opsi karier lain yang cukup relevan dari hasil analisis ini.'
+                      : 'Opsi karier lain akan muncul setelah analisis CV selesai.'}
+                  </p>
+                )}
               </div>
 
               <div className="page-actions step-actions">
