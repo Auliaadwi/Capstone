@@ -282,6 +282,15 @@ function getCareerFitQuestionId(question, index) {
   return question.id || `career-fit-question-${index + 1}`;
 }
 
+function clampPercentage(value, fallback = 0) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) {
+    return fallback;
+  }
+
+  return Math.min(100, Math.max(0, Math.round(numberValue * 100) / 100));
+}
+
 function getSelectedCareerSignal(questions, answers, matches = []) {
   const roleCounts = new Map();
   const roleOptions = new Map();
@@ -547,6 +556,8 @@ function App() {
   const biodataProgress = Math.round((biodataFilledCount / requiredBiodataFields.length) * 100);
   const rawJobMatches = recommendation?.jobMatches || analysis.jobMatches || [];
   const jobMatches = rawJobMatches.filter(hasActionableJobMatch);
+  const shouldSkipCareerFitQuiz = hasScannedCv && jobMatches.length === 1;
+  const hasSkippedCareerFitQuiz = Boolean(quizResult?.skipped);
   const bestMatch = jobMatches[0] || {
     id: analysis.suggestedRoleId || targetRole,
     name: analysis.targetRole || analysis.recommendedCareer || pendingAiRoleLabel,
@@ -611,11 +622,13 @@ function App() {
       ? currentInsight.marketSignals
       : [...topGaps, ...topStrengths]
   ).slice(0, 5);
-  const dashboardTrackLabel = recommendationSource ? recommendationSourceLabel : (quizResult ? 'Jalur paling cocok' : 'Wawasan awal');
+  const dashboardTrackLabel = recommendationSource ? recommendationSourceLabel : (hasSkippedCareerFitQuiz ? 'Rekomendasi tunggal' : (quizResult ? 'Jalur paling cocok' : 'Wawasan awal'));
   const dashboardDecisionTitle = finalResult?.recommendedRoleName || recommendedCareerName || quizResult?.selectedRoleName || careerRecommendation?.title || bestMatch.name || pendingAiRoleLabel;
   const dashboardDecisionCopy = finalResult?.summary || currentInsight.summary || quizResult?.recommendation || careerRecommendation?.summary || analysis.businessGoal;
-  const dashboardDecisionSupportCopy = quizResult
-    ? (finalResult?.quizSummary || `Kuis singkat menguatkan arah ${quizResult.selectedRoleName || dashboardDecisionTitle} berdasarkan tipe pekerjaan yang kamu pilih.`)
+  const dashboardDecisionSupportCopy = hasSkippedCareerFitQuiz
+    ? (finalResult?.quizSummary || 'Kuis singkat dilewati karena rekomendasi pekerjaan sudah tunggal dari hasil analisis.')
+    : quizResult
+      ? (finalResult?.quizSummary || `Kuis singkat menguatkan arah ${quizResult.selectedRoleName || dashboardDecisionTitle} berdasarkan tipe pekerjaan yang kamu pilih.`)
     : 'Jawaban kuis singkat akan membantu memilih peran yang paling kamu minati dari daftar rekomendasi.';
   const activePage = standalonePages[currentPage] || flowPages.find((page) => page.id === currentPage) || flowPages[0];
   const isFlowPage = flowPages.some((page) => page.id === currentPage);
@@ -640,6 +653,7 @@ function App() {
     hasScannedCv,
     quizResult,
     finalResult,
+    shouldSkipCareerFitQuiz,
     missingBiodataFields
   };
   const navigationGuardRef = useRef(navigationGuard);
@@ -650,6 +664,17 @@ function App() {
   const clearQuizStatusMessage = () => setQuizStatusMessage('');
 
   const goToPage = (pageId, options = {}) => {
+    if (pageId === 'quiz' && shouldSkipCareerFitQuiz && !options.force) {
+      const fallbackPage = finalResult ? 'result' : 'matches';
+      setCurrentPage(fallbackPage);
+      clearStatusMessage();
+      if (window.location.hash !== `#/${fallbackPage}`) {
+        window.history.pushState(null, '', `#/${fallbackPage}`);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     if (!options.force) {
       const blockedMessage = getPageBlockMessage(pageId);
       if (blockedMessage) {
@@ -666,8 +691,9 @@ function App() {
           setCurrentPage('biodata');
           window.history.pushState(null, '', '#/biodata');
         } else {
-          setCurrentPage('quiz');
-          window.history.pushState(null, '', '#/quiz');
+          const fallbackPage = shouldSkipCareerFitQuiz ? 'matches' : 'quiz';
+          setCurrentPage(fallbackPage);
+          window.history.pushState(null, '', `#/${fallbackPage}`);
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
@@ -812,7 +838,12 @@ function App() {
       const guardState = navigationGuardRef.current;
       const blockedMessage = getPageBlockMessageForState(nextPage, guardState);
 
-      if (blockedMessage) {
+      if (nextPage === 'quiz' && guardState.shouldSkipCareerFitQuiz) {
+        const fallbackPage = guardState.finalResult ? 'result' : 'matches';
+        clearStatusMessage();
+        setCurrentPage(fallbackPage);
+        window.history.replaceState(null, '', `#/${fallbackPage}`);
+      } else if (blockedMessage) {
         clearStatusMessage();
         if (!guardState.hasSelectedCv) {
           setShowCvErrors(true);
@@ -826,8 +857,9 @@ function App() {
           setCurrentPage('biodata');
           window.history.replaceState(null, '', '#/biodata');
         } else {
-          setCurrentPage('quiz');
-          window.history.replaceState(null, '', '#/quiz');
+          const fallbackPage = guardState.shouldSkipCareerFitQuiz ? 'matches' : 'quiz';
+          setCurrentPage(fallbackPage);
+          window.history.replaceState(null, '', `#/${fallbackPage}`);
         }
       } else {
         setCurrentPage(nextPage);
@@ -914,23 +946,27 @@ function App() {
       setMiniQuizAnswer({});
       let nextCareerFitQuiz = null;
       let nextQuizStatusMessage = '';
-      try {
-        const quizResponse = await createCareerFitQuiz({
-          jobMatches: nextAnalysis.jobMatches || [],
-          extractedSkills: nextAnalysis.extractedSkills || [],
-          skillDimiliki: nextAnalysis.skillDimiliki || [],
-          skillGap: nextAnalysis.skillGap || [],
-          targetRole: nextAnalysis.suggestedRoleId || nextAnalysis.targetRoleId || targetRole,
-          recommendedCareer: nextAnalysis.recommendedCareer,
-          aiSource: nextAnalysis.aiSource
-        });
-        const backendQuiz = quizResponse.data.question || null;
-        nextCareerFitQuiz = getCareerFitQuestions(backendQuiz).length ? backendQuiz : null;
-        if (!nextCareerFitQuiz) {
-          nextQuizStatusMessage = 'Kuis singkat belum tersedia untuk hasil ini. Coba lagi beberapa saat lagi.';
+      if ((nextAnalysis.jobMatches || []).length === 1) {
+        nextQuizStatusMessage = 'Kuis singkat dilewati karena rekomendasi pekerjaan sudah tunggal.';
+      } else {
+        try {
+          const quizResponse = await createCareerFitQuiz({
+            jobMatches: nextAnalysis.jobMatches || [],
+            extractedSkills: nextAnalysis.extractedSkills || [],
+            skillDimiliki: nextAnalysis.skillDimiliki || [],
+            skillGap: nextAnalysis.skillGap || [],
+            targetRole: nextAnalysis.suggestedRoleId || nextAnalysis.targetRoleId || targetRole,
+            recommendedCareer: nextAnalysis.recommendedCareer,
+            aiSource: nextAnalysis.aiSource
+          });
+          const backendQuiz = quizResponse.data.question || null;
+          nextCareerFitQuiz = getCareerFitQuestions(backendQuiz).length ? backendQuiz : null;
+          if (!nextCareerFitQuiz) {
+            nextQuizStatusMessage = 'Kuis singkat belum tersedia untuk hasil ini. Coba lagi beberapa saat lagi.';
+          }
+        } catch (quizError) {
+          nextQuizStatusMessage = quizError.response?.data?.error || 'Kuis singkat belum bisa dibuat saat ini.';
         }
-      } catch (quizError) {
-        nextQuizStatusMessage = quizError.response?.data?.error || 'Kuis singkat belum bisa dibuat saat ini.';
       }
       setCareerFitQuiz(nextCareerFitQuiz);
       setQuizStatusMessage(nextQuizStatusMessage);
@@ -997,59 +1033,57 @@ function App() {
     clearStatusMessage();
   };
 
-  const handleQuizSubmit = async () => {
-    if (answeredCount < activeCareerFitQuestions.length || !selectedCareerOption) {
-      clearStatusMessage();
-      return;
-    }
+  const completeCareerAssessment = async ({
+    selectedMatch,
+    selectedRoleId,
+    selectedRoleName,
+    selectedCareerOption = null,
+    quizScore,
+    quizAnswers = [],
+    skippedQuiz = false
+  }) => {
+    const finalSelectedRoleName = selectedRoleName || selectedMatch.name || selectedCareerOption?.label || recommendedCareerName;
+    const finalQuizScore = clampPercentage(quizScore, 0);
+    const adjustedJobMatches = jobMatches
+      .map((match) => {
+        if (match.id !== selectedRoleId) {
+          return match;
+        }
 
-    setIsSubmittingQuiz(true);
-    clearStatusMessage();
-
-    try {
-      const selectedMatch = selectedCareerMatch || bestMatch;
-      const selectedRoleId = selectedCareerOption.roleId || selectedMatch.id || analysis.suggestedRoleId || targetRole;
-      const baseScore = selectedMatch.matchScore ?? analysis.readinessScore ?? 0;
-      const quizScore = Math.min(96, Math.max(55, baseScore + 10));
-      const quizAnswers = activeCareerFitQuestions.map((question, index) => {
-        const questionId = getCareerFitQuestionId(question, index);
-        const selectedOptionId = miniQuizAnswer[questionId];
-        const selectedOption = question.options?.find((option) => option.id === selectedOptionId);
+        if (skippedQuiz) {
+          return {
+            ...match,
+            singleRecommendation: true
+          };
+        }
 
         return {
-          question: question.prompt,
-          selectedResponse: selectedOption?.response || '',
-          selectedRoleId: selectedOption?.roleId || '',
-          selectedRoleName: selectedOption?.label || ''
+          ...match,
+          matchScore: Math.min(96, Math.max(match.matchScore || 0, finalQuizScore)),
+          quizSignal: true
         };
-      });
-      const adjustedJobMatches = jobMatches
-        .map((match) => (
-          match.id === selectedRoleId
-            ? {
-                ...match,
-                matchScore: Math.min(96, Math.max(match.matchScore || 0, quizScore)),
-                quizSignal: true
-              }
-            : match
-        ))
-        .sort((first, second) => (second.matchScore || 0) - (first.matchScore || 0));
-      const quizData = {
-        score: quizScore,
-        track: 'career-fit',
-        selectedRoleId,
-        selectedRoleName: selectedMatch.name || selectedCareerOption.label,
-        selectedResponse: selectedCareerOption.response,
-        recommendation: `Kuis singkat menguatkan arah ${selectedMatch.name || selectedCareerOption.label}. Fokuskan rencana belajar pada bukti yang relevan dengan pilihan ini.`
-      };
+      })
+      .sort((first, second) => (second.matchScore || 0) - (first.matchScore || 0));
+    const quizData = {
+      score: finalQuizScore,
+      track: skippedQuiz ? 'rekomendasi-tunggal' : 'career-fit',
+      selectedRoleId,
+      selectedRoleName: finalSelectedRoleName,
+      selectedResponse: selectedCareerOption?.response || 'Rekomendasi tunggal dari hasil analisis',
+      skipped: skippedQuiz,
+      recommendation: skippedQuiz
+        ? `Hasil akhir mengikuti ${finalSelectedRoleName} karena hanya ada satu rekomendasi pekerjaan dari analisis CV.`
+        : `Kuis singkat menguatkan arah ${finalSelectedRoleName}. Fokuskan rencana belajar pada bukti yang relevan dengan pilihan ini.`
+    };
 
-      setQuizResult(quizData);
-      setTargetRole(selectedRoleId);
+    setQuizResult(quizData);
+    setTargetRole(selectedRoleId);
+    if (!skippedQuiz) {
       submitQuiz({
         ...quizData,
         answers: quizAnswers,
         targetRole: selectedRoleId,
-        targetRoleName: selectedMatch.name || selectedCareerOption.label,
+        targetRoleName: finalSelectedRoleName,
         recommendedCareer: analysis.recommendedCareer,
         jobMatches: adjustedJobMatches.slice(0, 5).map((match) => ({
           id: match.id,
@@ -1068,41 +1102,117 @@ function App() {
         .catch((historyError) => {
           console.warn('Quiz history save failed:', historyError);
         });
+    }
 
-      const recommendationResponse = await createRecommendation({
-        targetRole: selectedRoleId,
-        extractedSkills: analysis.skillDimiliki?.length ? analysis.skillDimiliki : analysis.extractedSkills,
-        quizScore
-      });
-      const nextRecommendation = {
-        ...recommendationResponse.data,
-        extractedSkills: analysis.extractedSkills,
-        skillDimiliki: analysis.skillDimiliki,
-        jobMatches: adjustedJobMatches,
-        suggestedRoleId: selectedRoleId,
-        selectedCareerSignal: selectedCareerOption
-      };
-      setRecommendation(nextRecommendation);
+    const recommendationResponse = await createRecommendation({
+      targetRole: selectedRoleId,
+      extractedSkills: analysis.skillDimiliki?.length ? analysis.skillDimiliki : analysis.extractedSkills,
+      quizScore: finalQuizScore
+    });
+    const nextRecommendation = {
+      ...recommendationResponse.data,
+      extractedSkills: analysis.extractedSkills,
+      skillDimiliki: analysis.skillDimiliki,
+      jobMatches: adjustedJobMatches,
+      suggestedRoleId: selectedRoleId,
+      selectedCareerSignal: selectedCareerOption,
+      quizSkipped: skippedQuiz
+    };
+    setRecommendation(nextRecommendation);
 
-      const finalResponse = await createFinalCareerResult({
-        cvText: analysis.aiReadableText || analysis.extractedCvText || extractedCvText,
-        profile: biodata,
-        recommendedCareer: analysis.recommendedCareer,
-        extractedSkills: analysis.extractedSkills || [],
-        skillDimiliki: analysis.skillDimiliki || [],
-        skillGap: nextRecommendation.skillGap || analysis.skillGap || [],
-        jobMatches: adjustedJobMatches,
-        recommendation: nextRecommendation,
-        quiz: {
-          score: quizScore,
-          selectedRoleId,
-          selectedRoleName: selectedMatch.name || selectedCareerOption.label,
-          answers: quizAnswers
-        }
-      });
-      setFinalResult(finalResponse.data);
-      clearStatusMessage();
+    const finalResponse = await createFinalCareerResult({
+      cvText: analysis.aiReadableText || analysis.extractedCvText || extractedCvText,
+      profile: biodata,
+      recommendedCareer: analysis.recommendedCareer,
+      extractedSkills: analysis.extractedSkills || [],
+      skillDimiliki: analysis.skillDimiliki || [],
+      skillGap: nextRecommendation.skillGap || analysis.skillGap || [],
+      jobMatches: adjustedJobMatches,
+      recommendation: nextRecommendation,
+      quiz: {
+        score: finalQuizScore,
+        selectedRoleId,
+        selectedRoleName: finalSelectedRoleName,
+        answers: quizAnswers,
+        skipped: skippedQuiz
+      }
+    });
+    setFinalResult(finalResponse.data);
+    clearStatusMessage();
+    goToPage('result', { force: true });
+  };
+
+  const handleSkipQuizSubmit = async () => {
+    if (!shouldSkipCareerFitQuiz || !jobMatches.length) {
+      goToPage('quiz');
+      return;
+    }
+
+    if (finalResult && hasSkippedCareerFitQuiz) {
       goToPage('result', { force: true });
+      return;
+    }
+
+    setIsSubmittingQuiz(true);
+    clearStatusMessage();
+
+    try {
+      const selectedMatch = jobMatches[0] || bestMatch;
+      const selectedRoleId = selectedMatch.id || analysis.suggestedRoleId || targetRole;
+      const selectedRoleName = selectedMatch.name || recommendedCareerName;
+      const baseScore = selectedMatch.matchScore ?? analysis.readinessScore ?? careerMatchScore;
+      await completeCareerAssessment({
+        selectedMatch,
+        selectedRoleId,
+        selectedRoleName,
+        quizScore: baseScore,
+        quizAnswers: [],
+        skippedQuiz: true
+      });
+    } catch (error) {
+      setStatusMessage(error.response?.data?.error || error.message || 'Hasil akhir belum bisa dibuat. Silakan coba lagi.');
+    } finally {
+      setIsSubmittingQuiz(false);
+    }
+  };
+
+  const handleQuizSubmit = async () => {
+    if (answeredCount < activeCareerFitQuestions.length || !selectedCareerOption) {
+      clearStatusMessage();
+      return;
+    }
+
+    setIsSubmittingQuiz(true);
+    clearStatusMessage();
+
+    try {
+      const selectedMatch = selectedCareerMatch || bestMatch;
+      const selectedRoleId = selectedCareerOption.roleId || selectedMatch.id || analysis.suggestedRoleId || targetRole;
+      const selectedRoleName = selectedMatch.name || selectedCareerOption.label;
+      const baseScore = clampPercentage(selectedMatch.matchScore ?? analysis.readinessScore ?? 0, 0);
+      const quizScore = Math.min(96, Math.max(55, baseScore + 10));
+      const quizAnswers = activeCareerFitQuestions.map((question, index) => {
+        const questionId = getCareerFitQuestionId(question, index);
+        const selectedOptionId = miniQuizAnswer[questionId];
+        const selectedOption = question.options?.find((option) => option.id === selectedOptionId);
+
+        return {
+          question: question.prompt,
+          selectedResponse: selectedOption?.response || '',
+          selectedRoleId: selectedOption?.roleId || '',
+          selectedRoleName: selectedOption?.label || ''
+        };
+      });
+
+      await completeCareerAssessment({
+        selectedMatch,
+        selectedRoleId,
+        selectedRoleName,
+        selectedCareerOption,
+        quizScore,
+        quizAnswers,
+        skippedQuiz: false
+      });
     } catch (error) {
       setStatusMessage(error.response?.data?.error || error.message || 'Pengiriman kuis gagal. Silakan coba lagi.');
     } finally {
@@ -1650,10 +1760,12 @@ function App() {
                 <button
                   className="primary-button"
                   type="button"
-                  onClick={() => goToPage('quiz')}
-                  disabled={activeCareerFitQuestions.length === 0}
+                  onClick={shouldSkipCareerFitQuiz ? handleSkipQuizSubmit : () => goToPage('quiz')}
+                  disabled={shouldSkipCareerFitQuiz ? isSubmittingQuiz : activeCareerFitQuestions.length === 0}
                 >
-                  Lanjut Kuis Singkat
+                  {shouldSkipCareerFitQuiz
+                    ? (isSubmittingQuiz ? 'Menyiapkan Hasil...' : 'Lanjut Hasil Akhir')
+                    : 'Lanjut Kuis Singkat'}
                 </button>
               </div>
               {quizStatusMessage && (
@@ -1702,7 +1814,11 @@ function App() {
                 );
               })}
               {!activeCareerFitQuestions.length && (
-                <p className="empty-state-text">Kuis singkat belum tersedia untuk hasil analisis ini.</p>
+                <p className="empty-state-text">
+                  {shouldSkipCareerFitQuiz
+                    ? 'Kuis singkat dilewati karena rekomendasi pekerjaan sudah tunggal.'
+                    : 'Kuis singkat belum tersedia untuk hasil analisis ini.'}
+                </p>
               )}
 
               <div className="page-actions step-actions">
@@ -1712,10 +1828,12 @@ function App() {
                 <button
                   className="primary-button"
                   type="button"
-                  onClick={handleQuizSubmit}
-                  disabled={isSubmittingQuiz || activeCareerFitQuestions.length === 0 || answeredCount < activeCareerFitQuestions.length}
+                  onClick={shouldSkipCareerFitQuiz ? handleSkipQuizSubmit : handleQuizSubmit}
+                  disabled={isSubmittingQuiz || (!shouldSkipCareerFitQuiz && (activeCareerFitQuestions.length === 0 || answeredCount < activeCareerFitQuestions.length))}
                 >
-                  {isSubmittingQuiz ? 'Menghitung...' : 'Lihat Hasil'}
+                  {isSubmittingQuiz
+                    ? 'Menyiapkan...'
+                    : (shouldSkipCareerFitQuiz ? 'Lihat Hasil Akhir' : 'Lihat Hasil')}
                 </button>
               </div>
 
@@ -1732,7 +1850,9 @@ function App() {
               <div className="panel-label">{getFlowPageNumber('result')} / Hasil Akhir</div>
               <h3>Kesimpulan akhir dari AI</h3>
               <p className="panel-helper">
-                Hasil ini menggabungkan isi CV, rekomendasi pekerjaan dari analisis, dan pola jawaban kuis singkat.
+                {hasSkippedCareerFitQuiz
+                  ? 'Hasil ini menggabungkan isi CV dan rekomendasi pekerjaan tunggal dari analisis.'
+                  : 'Hasil ini menggabungkan isi CV, rekomendasi pekerjaan dari analisis, dan pola jawaban kuis singkat.'}
               </p>
 
               <div className="final-result-card">
@@ -1751,8 +1871,14 @@ function App() {
                   <p>{finalResult?.jobMatchSummary || `${recommendedCareerName} muncul dengan kecocokan ${careerMatchScore}% dan kesenjangan ${careerGapScore}%.`}</p>
                 </section>
                 <section className="result-summary-block">
-                  <span>Kuis singkat</span>
-                  <p>{finalResult?.quizSummary || `${answeredCount} jawaban sudah dipakai sebagai validasi minat.`}</p>
+                  <span>{hasSkippedCareerFitQuiz ? 'Validasi rekomendasi' : 'Kuis singkat'}</span>
+                  <p>
+                    {finalResult?.quizSummary || (
+                      hasSkippedCareerFitQuiz
+                        ? 'Kuis singkat dilewati karena rekomendasi pekerjaan sudah tunggal.'
+                        : `${answeredCount} jawaban sudah dipakai sebagai validasi minat.`
+                    )}
+                  </p>
                 </section>
               </div>
 
@@ -1774,8 +1900,8 @@ function App() {
               </div>
 
               <div className="page-actions step-actions">
-                <button className="secondary-button" type="button" onClick={() => goToPage('quiz', { force: true })}>
-                  Kembali ke Kuis Singkat
+                <button className="secondary-button" type="button" onClick={() => goToPage(hasSkippedCareerFitQuiz ? 'matches' : 'quiz', { force: true })}>
+                  {hasSkippedCareerFitQuiz ? 'Kembali ke Rekomendasi' : 'Kembali ke Kuis Singkat'}
                 </button>
                 <button className="primary-button" type="button" onClick={() => goToPage('dashboard')}>
                   Lanjut Dasbor
@@ -1870,7 +1996,9 @@ function App() {
                 <div className="dashboard-block-heading">
                   <span>Keputusan sistem</span>
                   <strong>
-                    {quizResult ? 'Peran akhir dari rekomendasi kerja dan kuis singkat' : 'Belum ada keputusan akhir'}
+                    {hasSkippedCareerFitQuiz
+                      ? 'Peran akhir dari rekomendasi kerja'
+                      : (quizResult ? 'Peran akhir dari rekomendasi kerja dan kuis singkat' : 'Belum ada keputusan akhir')}
                   </strong>
                 </div>
                 <p className="dashboard-block-copy">{dashboardDecisionSupportCopy}</p>
@@ -1899,8 +2027,8 @@ function App() {
             </div>
 
             <div className="page-actions dashboard-actions">
-              <button className="secondary-button" type="button" onClick={() => goToPage('quiz')}>
-                Kembali ke Kuis Singkat
+              <button className="secondary-button" type="button" onClick={() => goToPage(hasSkippedCareerFitQuiz ? 'matches' : 'quiz')}>
+                {hasSkippedCareerFitQuiz ? 'Kembali ke Rekomendasi' : 'Kembali ke Kuis Singkat'}
               </button>
               <button
                 className="primary-button"
