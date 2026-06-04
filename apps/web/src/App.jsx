@@ -1447,7 +1447,7 @@ function App() {
   };
 
   const handleSkipQuizSubmit = async () => {
-    if (!shouldSkipCareerFitQuiz || !jobMatches.length) {
+    if (!shouldSkipCareerFitQuiz) {
       goToPage('quiz');
       return;
     }
