@@ -2166,7 +2166,7 @@ function App() {
                     ))}
                   </div>
                 )}
-                {scanRecommendationSource && <small>{scanRecommendationSourceLabel}</small>}
+
                 {scanSummary && (
                   <p>{scanSummary}</p>
                 )}
