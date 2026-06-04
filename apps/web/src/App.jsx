@@ -2584,6 +2584,7 @@ function App() {
               </ul>
             </section>
           </div>
+        </div>
       </footer>
 
       {isUploading && (
