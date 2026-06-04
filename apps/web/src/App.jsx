@@ -707,6 +707,7 @@ function App() {
   const [showBiodataErrors, setShowBiodataErrors] = useState(false);
   const [showCvErrors, setShowCvErrors] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
   const [currentPage, setCurrentPage] = useState(getPageFromHash);
   const [statusMessage, setStatusMessage] = useState('');
@@ -723,6 +724,37 @@ function App() {
   const [jobVacancies, setJobVacancies] = useState([]);
   const [isJobVacanciesLoading, setIsJobVacanciesLoading] = useState(false);
   const [jobVacanciesMessage, setJobVacanciesMessage] = useState('');
+
+  useEffect(() => {
+    let timer;
+    if (isUploading) {
+      setLoadingProgress(5);
+      timer = setInterval(() => {
+        setLoadingProgress((prev) => {
+          if (prev >= 95) return 95;
+          const increment = prev < 30 ? 5 : prev < 60 ? 3 : prev < 85 ? 2 : 1;
+          return prev + increment;
+        });
+      }, 350);
+    } else {
+      setLoadingProgress(0);
+    }
+    return () => clearInterval(timer);
+  }, [isUploading]);
+
+  const currentLoadingStepText = useMemo(() => {
+    if (loadingProgress <= 20) {
+      return 'Membaca berkas CV PDF Anda...';
+    } else if (loadingProgress <= 40) {
+      return 'Mengekstrak keterampilan & riwayat pengalaman...';
+    } else if (loadingProgress <= 60) {
+      return 'Mencocokkan profil dengan taksonomi industri...';
+    } else if (loadingProgress <= 80) {
+      return 'Mendeteksi kesenjangan skill & memetakan kursus...';
+    } else {
+      return 'AI sedang menyusun kuis interaktif yang personal...';
+    }
+  }, [loadingProgress]);
 
   const currentUser = session?.user || null;
 
@@ -2552,8 +2584,29 @@ function App() {
               </ul>
             </section>
           </div>
-        </div>
       </footer>
+
+      {isUploading && (
+        <div className="loading-overlay" aria-live="assertive" role="dialog" aria-modal="true">
+          <div className="loading-card">
+            <div className="loading-spinner-wrapper">
+              <div className="loading-spinner-outer"></div>
+              <div className="loading-spinner-inner"></div>
+              <div className="loading-spinner-core">
+                <Icon name="spark" size={26} />
+              </div>
+            </div>
+            <h3>Menganalisis CV & Profil</h3>
+            <p className="loading-status-text">{currentLoadingStepText}</p>
+            <div className="loading-progress-container">
+              <div className="loading-progress-bar-track">
+                <div className="loading-progress-bar-fill" style={{ width: `${loadingProgress}%` }}></div>
+              </div>
+            </div>
+            <span className="loading-percentage">{loadingProgress}%</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
