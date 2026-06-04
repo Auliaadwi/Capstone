@@ -815,6 +815,12 @@ function App() {
     matchScore: analysis.readinessScore || 0,
     matchedSkills: analysis.extractedSkills || []
   };
+  const scanBestMatchRequiredSkills = getRequiredSkillBadges(scanBestMatch);
+  const scanBestMatchMatchedSkills = getMatchedSkillBadges(scanBestMatch);
+  const scanBestMatchMissingSkills = getMissingSkillBadges(scanBestMatch);
+  const scanBestMatchSkills = scanBestMatchRequiredSkills.length
+    ? scanBestMatchRequiredSkills
+    : (scanBestMatchMissingSkills.length ? scanBestMatchMissingSkills : scanBestMatchMatchedSkills);
   const scanRecommendedCareerName = rawScanRecommendedCareerName || scanBestMatch.name || pendingAiRoleLabel;
   const scanCareerMatchScore = analysis.careerMatchScore ?? analysis.career_match_score ?? scanBestMatch.careerMatchScore ?? scanBestMatch.career_match_score ?? scanBestMatch.matchScore ?? analysis.readinessScore ?? 0;
   const scanCareerGapScore = analysis.gapScore ?? analysis.gap_score ?? scanBestMatch.gapScore ?? scanBestMatch.gap_score ?? Math.max(0, 100 - scanCareerMatchScore);
@@ -2151,6 +2157,13 @@ function App() {
                 <span>Rekomendasi utama berdasarkan hasil analisis</span>
                 <strong>{scanRecommendedCareerName}</strong>
                 <p>{scanCareerMatchScore}% kecocokan, kesenjangan {scanCareerGapScore}%</p>
+                {scanBestMatchSkills.length > 0 && (
+                  <div className="top-match-skill-badges" aria-label={`Skill untuk ${scanRecommendedCareerName}`}>
+                    {scanBestMatchSkills.slice(0, 6).map((skill) => (
+                      <span className="top-match-skill-badge" key={`top-match-${skill}`}>{skill}</span>
+                    ))}
+                  </div>
+                )}
                 {scanRecommendationSource && <small>{scanRecommendationSourceLabel}</small>}
                 {scanSummary && (
                   <p>{scanSummary}</p>
