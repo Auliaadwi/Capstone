@@ -728,9 +728,10 @@ function App() {
   useEffect(() => {
     let timer;
     if (isUploading) {
-      setLoadingProgress(5);
+      setLoadingProgress((current) => (current === 100 ? 100 : 5));
       timer = setInterval(() => {
         setLoadingProgress((prev) => {
+          if (prev >= 100) return 100;
           if (prev >= 95) return 95;
           const increment = prev < 30 ? 5 : prev < 60 ? 3 : prev < 85 ? 2 : 1;
           return prev + increment;
@@ -785,7 +786,6 @@ function App() {
     getCareerRecommendationMatches(analysis)
   );
   const jobMatches = rawJobMatches.filter(hasActionableJobMatch);
-  const shouldSkipCareerFitQuiz = hasScannedCv && jobMatches.length === 1;
   const hasSkippedCareerFitQuiz = Boolean(quizResult?.skipped);
   const bestMatch = jobMatches[0] || {
     id: analysis.suggestedRoleId || targetRole,
@@ -831,6 +831,7 @@ function App() {
       && matchName !== String(scanRecommendedCareerName || '').toLowerCase()
     );
   });
+  const shouldSkipCareerFitQuiz = hasScannedCv && (jobMatches.length <= 1 || scanAlternativeCareerMatches.length === 0);
   const activeCareerFitQuiz = careerFitQuiz?.questions?.length || careerFitQuiz?.options?.length ? careerFitQuiz : null;
   const activeCareerFitQuestions = getCareerFitQuestions(activeCareerFitQuiz);
   const answeredCount = activeCareerFitQuestions.filter((question, index) => (
@@ -1220,7 +1221,26 @@ function App() {
       setMiniQuizAnswer({});
       let nextCareerFitQuiz = null;
       let nextQuizStatusMessage = '';
-      if ((nextAnalysis.jobMatches || []).length === 1) {
+
+      const nextScanBestMatch = nextAnalysisJobMatches.find((match) => (
+        (nextAnalysis.recommendedCareer && String(match.name || '').toLowerCase() === String(nextAnalysis.recommendedCareer).toLowerCase())
+        || match.id === nextAnalysis.suggestedRoleId
+        || match.id === nextAnalysis.targetRoleId
+      )) || nextAnalysisJobMatches[0];
+      const nextScanRecommendedCareerName = nextAnalysis.recommendedCareer || nextScanBestMatch?.name || pendingAiRoleLabel;
+      const nextNormalizedScanCareerName = String(nextAnalysis.recommendedCareer || '').toLowerCase();
+      const nextScanAlternativeMatches = nextAnalysisJobMatches.filter((match) => {
+        const matchName = String(match.name || '').toLowerCase();
+        const matchId = String(match.id || '').toLowerCase();
+        return (
+          matchId !== String(nextScanBestMatch?.id || '').toLowerCase()
+          && matchId !== String(nextAnalysis.suggestedRoleId || '').toLowerCase()
+          && matchName !== nextNormalizedScanCareerName
+          && matchName !== String(nextScanRecommendedCareerName || '').toLowerCase()
+        );
+      });
+
+      if (nextAnalysisJobMatches.length <= 1 || nextScanAlternativeMatches.length === 0) {
         nextQuizStatusMessage = 'Kuis singkat dilewati karena rekomendasi pekerjaan sudah tunggal.';
       } else {
         try {
@@ -1251,6 +1271,10 @@ function App() {
       if (response.data.suggestedRoleId) {
         setTargetRole(response.data.suggestedRoleId);
       }
+
+      setLoadingProgress(100);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
       goToPage('matches', { force: true });
       clearStatusMessage();
     } catch (error) {
