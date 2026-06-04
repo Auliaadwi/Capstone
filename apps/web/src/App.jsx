@@ -791,7 +791,8 @@ function App() {
     id: analysis.suggestedRoleId || targetRole,
     name: analysis.recommendedCareer || analysis.targetRole || pendingAiRoleLabel,
     matchScore: analysis.readinessScore || 0,
-    matchedSkills: analysis.extractedSkills || []
+    matchedSkills: analysis.skillDimiliki || analysis.extractedSkills || [],
+    missingSkills: analysis.skillGap || []
   };
   const rawRecommendedCareerName = currentInsight.recommendedCareer || currentInsight.recommended_career || analysis.recommendedCareer || analysis.recommended_career || '';
   const recommendedCareerName = bestMatch.name || rawRecommendedCareerName || pendingAiRoleLabel;
@@ -813,7 +814,8 @@ function App() {
     id: analysis.suggestedRoleId || analysis.targetRoleId || targetRole,
     name: analysis.recommendedCareer || analysis.targetRole || pendingAiRoleLabel,
     matchScore: analysis.readinessScore || 0,
-    matchedSkills: analysis.extractedSkills || []
+    matchedSkills: analysis.skillDimiliki || analysis.extractedSkills || [],
+    missingSkills: analysis.skillGap || []
   };
   const scanBestMatchRequiredSkills = getRequiredSkillBadges(scanBestMatch);
   const scanBestMatchMatchedSkills = getMatchedSkillBadges(scanBestMatch);
