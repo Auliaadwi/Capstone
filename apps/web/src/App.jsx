@@ -789,7 +789,7 @@ function App() {
   const hasSkippedCareerFitQuiz = Boolean(quizResult?.skipped);
   const bestMatch = jobMatches[0] || {
     id: analysis.suggestedRoleId || targetRole,
-    name: analysis.targetRole || analysis.recommendedCareer || pendingAiRoleLabel,
+    name: analysis.recommendedCareer || analysis.targetRole || pendingAiRoleLabel,
     matchScore: analysis.readinessScore || 0,
     matchedSkills: analysis.extractedSkills || []
   };
@@ -811,7 +811,7 @@ function App() {
     || match.id === analysis.targetRoleId
   )) || scanJobMatches[0] || {
     id: analysis.suggestedRoleId || analysis.targetRoleId || targetRole,
-    name: analysis.targetRole || analysis.recommendedCareer || pendingAiRoleLabel,
+    name: analysis.recommendedCareer || analysis.targetRole || pendingAiRoleLabel,
     matchScore: analysis.readinessScore || 0,
     matchedSkills: analysis.extractedSkills || []
   };
@@ -2596,7 +2596,7 @@ function App() {
             <section className="footer-tech">
               <h3>Data Science</h3>
               <ul>
-                <li>Anna Ramadhan <span>Universitas Jenderal Soedirman</span></li>
+                <li>Anna Ramadhani <span>Universitas Jenderal Soedirman</span></li>
                 <li>Wakhida Fajar Ardhiani <span>Universitas Sultan Ageng Tirtayasa</span></li>
               </ul>
             </section>
