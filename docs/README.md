@@ -1,13 +1,15 @@
-# SkillMap Frontend Documentation
+# Dokumentasi Frontend SkillMap
 
-This folder keeps frontend-facing documentation and shared product references.
+Folder ini berisi dokumentasi yang relevan untuk sisi frontend dan referensi produk bersama.
 
-## Index
+## Daftar Dokumen
 
-- `product/BATASAN.md` - MVP scope, limitations, and feature boundaries.
-- `architecture/FLOWCHART.md` - user flow and system process notes.
-- `contracts/AI_API_CONTRACT.md` - backend-to-AI contract reference kept for integration context.
-- `project/TASKS.md` - project task notes and capstone references.
-- `PROJECT_STRUCTURE.md` - frontend workspace map and separation rules.
+| File | Keterangan |
+|------|------------|
+| `product/BATASAN.md` | Batasan MVP, ruang lingkup fitur, dan hal-hal yang belum diimplementasikan |
+| `architecture/FLOWCHART.md` | Alur pengguna dan diagram proses sistem |
+| `contracts/AI_API_CONTRACT.md` | Kontrak API antara Backend dan AI, disimpan di sini sebagai referensi integrasi |
+| `project/TASKS.md` | Catatan tugas proyek dan referensi capstone |
+| `PROJECT_STRUCTURE.md` | Peta workspace frontend dan aturan pemisahan tanggung jawab |
 
-Backend runtime files live in `../BE-Capstone`. Do not put backend env templates or deploy files in this frontend workspace.
+File runtime, konfigurasi deploy, dan secret backend berada di `../BE-Capstone`.

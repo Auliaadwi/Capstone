@@ -1,19 +1,22 @@
-# 📜 Kontrak API SkillMap (Web <-> AI)
+# Kontrak API SkillMap — Web ↔ AI
 
-Dokumen ini adalah standar komunikasi (API Contract) antara sistem Web (Full-Stack) dan sistem AI. Karena tim AI akan men-deploy model di server sebagai API (Flask/FastAPI), maka format data (JSON) wajib mengikuti struktur di bawah ini agar Frontend dan Backend bisa memproses datanya tanpa error.
+Dokumen ini adalah standar komunikasi antara sistem Web (Full-Stack) dan sistem AI. Karena tim AI men-deploy model sebagai API terpisah (Flask/FastAPI), format data JSON yang dikirim dan diterima wajib mengikuti struktur berikut agar frontend dan backend dapat memproses hasilnya tanpa error.
 
 ---
 
-## 1. Endpoint: Ekstraksi & Analisis CV
-**Tujuan:** Menerima teks CV, mendeteksi skill, dan memetakan tingkat kecocokan (Readiness Score) terhadap daftar lowongan/pekerjaan yang ada.
+## 1. Endpoint: Ekstraksi dan Analisis CV
+
+Menerima teks CV, mendeteksi skill yang dimiliki, dan memetakan tingkat kecocokan (Readiness Score) terhadap daftar role yang tersedia.
 
 - **URL:** `POST /api/ai/analyze-cv`
 - **Content-Type:** `application/json`
 
-**Catatan implementasi web:** upload CV dari frontend wajib berupa PDF (`.pdf`) lewat `POST /api/cvs` dengan `multipart/form-data`. Backend menolak file non-PDF, mengekstrak isi PDF menjadi teks, lalu teks inilah yang dikirim/dibaca oleh AI. Endpoint lama `POST /api/cv/upload` masih tersedia sebagai alias kompatibilitas.
+> **Catatan implementasi web:** Upload CV dari frontend harus berupa PDF melalui `POST /api/cvs` dengan `multipart/form-data`. Backend menolak file non-PDF, mengekstrak isinya menjadi teks, lalu teks itulah yang dikirim ke AI. Endpoint lama `POST /api/cv/upload` masih tersedia sebagai alias.
 
-### 📥 Request Body (Dari Web ke AI)
-Web akan mengirimkan teks CV mentah (hasil OCR atau parse PDF di backend utama) ke AI.
+### Request Body (Web → AI)
+
+Web mengirimkan teks CV mentah (hasil parse PDF di backend) ke AI:
+
 ```json
 {
   "text": "Saya adalah lulusan Teknik Informatika dengan pengalaman menggunakan React, Node.js, dan Python. Pernah membuat project API menggunakan Express.",
@@ -21,8 +24,10 @@ Web akan mengirimkan teks CV mentah (hasil OCR atau parse PDF di backend utama) 
 }
 ```
 
-### 📤 Response Body (Dari AI ke Web)
-AI wajib mengembalikan daftar skill yang terdeteksi, serta rekomendasi role/pekerjaan terbaik.
+### Response Body (AI → Web)
+
+AI mengembalikan daftar skill yang terdeteksi beserta rekomendasi role terbaik:
+
 ```json
 {
   "status": "success",
@@ -54,10 +59,13 @@ AI wajib mengembalikan daftar skill yang terdeteksi, serta rekomendasi role/peke
   }
 }
 ```
-*(Catatan buat AI: Array `roadmap` dan `skillGap` difilter berdasarkan role yang skor kecocokannya paling tinggi).*
+
+> Array `roadmap` dan `skillGap` difilter berdasarkan role dengan skor kecocokan tertinggi.
 
 ### Response Tambahan dari Backend Web
-Endpoint `POST /api/cvs` juga mengembalikan teks hasil ekstraksi PDF agar frontend bisa menampilkan output yang dibaca AI.
+
+Endpoint `POST /api/cvs` juga mengembalikan teks hasil ekstraksi PDF agar frontend dapat menampilkan output yang dibaca AI:
+
 ```json
 {
   "fileName": "cv.pdf",
@@ -71,13 +79,16 @@ Endpoint `POST /api/cvs` juga mengembalikan teks hasil ekstraksi PDF agar fronte
 ---
 
 ## 2. Endpoint: Generate Rekomendasi (Learning Path)
-**Tujuan:** Memberikan hasil akhir (Peta Jalan Pembelajaran) setelah menggabungkan hasil CV dan hasil Kuis.
+
+Memberikan hasil akhir berupa peta jalan pembelajaran setelah menggabungkan hasil CV dan hasil quiz.
 
 - **URL:** `POST /api/ai/recommendations`
 - **Content-Type:** `application/json`
 
-### 📥 Request Body (Dari Web ke AI)
-Web akan mengirimkan data skill hasil CV, target role yang dipilih user, dan skor kuis yang baru saja dikerjakan.
+### Request Body (Web → AI)
+
+Web mengirimkan skill hasil CV, target role yang dipilih, dan skor quiz:
+
 ```json
 {
   "targetRole": "fullstack-web-developer",
@@ -86,8 +97,10 @@ Web akan mengirimkan data skill hasil CV, target role yang dipilih user, dan sko
 }
 ```
 
-### 📤 Response Body (Dari AI ke Web)
-AI wajib menghitung ulang `readinessScore` (Kesiapan) berdasarkan bobot CV dan Kuis, lalu memberikan rekomendasi.
+### Response Body (AI → Web)
+
+AI menghitung ulang `readinessScore` berdasarkan bobot CV dan quiz, lalu memberikan rekomendasi:
+
 ```json
 {
   "status": "success",
@@ -151,13 +164,14 @@ AI wajib menghitung ulang `readinessScore` (Kesiapan) berdasarkan bobot CV dan K
 
 ---
 
-## 💡 Notes untuk Tim AI:
-1. **Struktur Data Kosong:** Jika tidak ada skill yang terdeteksi, tolong tetap kembalikan array kosong `[]`, **jangan** dikembalikan sebagai `null`. (Contoh: `"extractedSkills": []`).
-2. **Error Handling:** Jika terjadi error (misal teks kepanjangan/invalid), tolong kembalikan HTTP Status `400` atau `500` dengan format:
+## Catatan untuk Tim AI
+
+1. **Array kosong:** Jika tidak ada skill yang terdeteksi, kembalikan array kosong `[]`, bukan `null`. Contoh: `"extractedSkills": []`.
+2. **Error handling:** Jika terjadi error (teks terlalu panjang, format tidak valid, dsb.), kembalikan HTTP status `400` atau `500` dengan format berikut:
    ```json
    {
      "status": "error",
      "message": "Teks CV tidak valid atau gagal diproses."
    }
    ```
-3. **Framework:** Silakan bangun API ini menggunakan **Flask** atau **FastAPI**. Web team akan nembak URL endpoint yang kalian kasih (misal `http://localhost:8000/api/ai/...`).
+3. **Framework:** API ini dapat dibangun menggunakan Flask atau FastAPI. Web team akan memanggil URL endpoint yang diberikan (contoh: `http://localhost:8000/api/ai/...`).
