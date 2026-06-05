@@ -506,7 +506,15 @@ function getAlternativeCareerSummary(match = {}) {
 }
 
 function getInsightSkills(insight = {}) {
-  return getArrayValue(insight.skillDimiliki, insight.skill_dimiliki, insight.extractedSkills);
+  return getArrayValue(
+    insight.skillDimiliki,
+    insight.skill_dimiliki,
+    insight.extractedSkills,
+    insight.detectedSkillsFromCv,
+    insight.detected_skills_from_cv,
+    insight.finalResult?.skillDimiliki,
+    insight.finalResult?.extractedSkills
+  );
 }
 
 function getInsightGaps(insight = {}) {
@@ -1893,25 +1901,6 @@ function App() {
                                 )}
                               </section>
 
-                              <section className="result-summary-block">
-                                <span>Roadmap belajar</span>
-                                {scanRoadmap.length ? (
-                                  <div className="roadmap-list history-roadmap-list">
-                                    {scanRoadmap.slice(0, 5).map((step, index) => (
-                                      <div className="roadmap-step" key={step.id || step.title || step.action || `${historyKey}-roadmap-${index}`}>
-                                        <span>{String(index + 1).padStart(2, '0')}</span>
-                                        <div>
-                                          <strong>{step.title || `Langkah ${index + 1}`}</strong>
-                                          {step.duration && <small>{step.duration}</small>}
-                                          <p>{getRoadmapStepText(step)}</p>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p>Roadmap belum tersedia untuk hasil scan ini.</p>
-                                )}
-                              </section>
                             </div>
                           )}
                         </article>
