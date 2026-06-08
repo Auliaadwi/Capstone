@@ -2600,7 +2600,7 @@ function App() {
             <section className="footer-tech">
               <h3>Data Science</h3>
               <ul>
-                <li>Anna Ramadhani <span>Universitas Jenderal Soedirman</span></li>
+                <li>Anna Ramandhani <span>Universitas Jenderal Soedirman</span></li>
                 <li>Wakhida Fajar Ardhiani <span>Universitas Sultan Ageng Tirtayasa</span></li>
               </ul>
             </section>
